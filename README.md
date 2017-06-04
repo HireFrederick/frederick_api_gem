@@ -9,9 +9,10 @@
 ```
 
 
-Need to connect to one of Frederick's APIs? You've come to the right
-place! Need to do something else? Well, this gem's probably not gonna help you,
-so, godspeed I guess.
+This gem provides a client for Frederick's V2 APIs.
+
+Note: Our V2 APIs have not yet been released for use by customers or partners. See
+[Frederick Developers](https://developers.hirefrederick.com) for supported APIs and documentation.
 
 ## Installation
 

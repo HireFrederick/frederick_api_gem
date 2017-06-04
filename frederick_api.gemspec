@@ -13,8 +13,9 @@ Gem::Specification.new do |spec|
 
   spec.summary       = 'Frederick API Client'
   spec.description   = 'Ruby client for the Frederick API'
-  spec.homepage      = 'https://github.com/BookerSoftwareInc/frederick_api_gem'
-  spec.files         = Dir['{lib}/**/*', 'README.md']
+  spec.homepage      = 'https://github.com/HireFrederick/frederick_api_gem'
+  spec.licenses      = ['MIT']
+  spec.files         = Dir['{lib}/**/*', 'README.md', 'MIT-LICENSE']
   spec.require_paths = ['lib']
   spec.add_runtime_dependency 'json_api_client', '>= 1.5.1'
 end
