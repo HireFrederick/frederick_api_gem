@@ -23,15 +23,15 @@ gem 'frederick_api'
 
 You're now ready to go with Frederick's v2 API!
 
-### Configuring FrederickApi
+### Configuring FrederickAPI
 
-You can use `FrederickApi.configure` or environment variables
+You can use `FrederickAPI.configure` or environment variables
 to configure the Frederick API client.
 
 ```ruby
 # config/initializers/frederick_api.rb
 ...
-FrederickApi.configure do |c|
+FrederickAPI.configure do |c|
   c.base_url = 'https://api.hirefrederick.com'
   c.api_key = '1234-5678-1234-5678-1234-5678'
 end
@@ -48,3 +48,36 @@ Environments:
   
 NOTE: You must specify the production base URL of `https://api.hirefrederick.com` in order to use this gem with
 Frederick's production API.
+
+## Usage
+
+Frederick V2 Resources correspond to ([JSON API](http://jsonapi.org/) compatible) APIs and use the
+[json_api_client](https://github.com/chingor13/json_api_client) gem under the hood, so provide access
+to standard "ActiveRecord-like" functionaliy such as `.create`, `.find`, `.where`, `.order`, `.includes` to create, find,
+filter, sort, and include relationships.
+
+### Access Tokens
+
+An access token is required to access resources on behalf of a use. Use `Resource.with_access_token { ... }` to make
+requests with an access token.
+
+
+```ruby
+# Fetch a location
+id = '6fdf0530-3e4e-46f1-9d11-5f90c48a50dc'
+location = FrederickAPI::V2::Location.find(id)
+=> #<FrederickAPI::V2::Location:0x007fd2f29a7618>
+
+location.name
+=> 'Bizzy Biz'
+
+# Update a location
+location.name = 'Biz Bizziest'
+location.save
+=> true
+
+# To instantiate a resource for update without fetching it first, set an id
+location = FrederickAPI::V2::Location.new(id: id)
+location.update_attributes(phone_number: '(555) 555-5555')
+=> true
+```

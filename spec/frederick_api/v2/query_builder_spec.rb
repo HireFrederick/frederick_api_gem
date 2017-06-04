@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe FrederickApi::Utils::JsonApiQueryBuilder do
+RSpec.describe FrederickAPI::V2::QueryBuilder do
   let(:query_builder) { described_class.new('klass') }
 
   describe '#params' do

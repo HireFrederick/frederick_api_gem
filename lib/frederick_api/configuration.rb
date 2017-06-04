@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-module FrederickApi # :nodoc:
+module FrederickAPI # :nodoc:
   class << self
     attr_writer :config
   end
 
-  # You may use `FrederickApi.configure` to configure the Frederick
+  # You may use `FrederickAPI.configure` to configure the Frederick
   # Internal API Gem or you can use environment variables. By default, the
   # client will connect to staging with a blank API key.
   # @see .configure
@@ -24,7 +24,7 @@ module FrederickApi # :nodoc:
     end
   end
 
-  # Configure FrederickApi, for example in an initializer or (better
+  # Configure FrederickAPI, for example in an initializer or (better
   # yet) in one of the `config/environments/*.rb` files so you can have it
   # configured differently per environment. For example, you may want to use
   # staging API in staging environment, or may want different timeouts in
@@ -33,21 +33,21 @@ module FrederickApi # :nodoc:
   # @example
   #   # config/environments/staging.rb
   #   ...
-  #   FrederickApi.configure do |c|
+  #   FrederickAPI.configure do |c|
   #     c.base_url = 'https://api.staging.hirefrederick.com/v1'
   #     c.api_key = '1234-5678-1234-5678-1234-5678'
   #   end
   #   ...
   #
-  # @yield [configuration] block to configure FrederickApi
-  # @return [FrederickApi::Configuration] the completed configuration
+  # @yield [configuration] block to configure FrederickAPI
+  # @return [FrederickAPI::Configuration] the completed configuration
   def self.configure
     yield(config)
   end
 
   # Returns a reference to the current configuration.
   #
-  # @return [FrederickApi::Configuration]
+  # @return [FrederickAPI::Configuration]
   def self.config
     @config ||= Configuration.new
   end

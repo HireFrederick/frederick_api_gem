@@ -2,10 +2,10 @@
 
 require 'spec_helper'
 
-module FrederickApi::V2::Models
-  RSpec.describe BaseResource, :integration do
+module FrederickAPI::V2
+  RSpec.describe Resource, :integration do
     let(:resource) do
-      Class.new(BaseResource) do
+      Class.new(Resource) do
         def self.name
           'User'
         end

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module FrederickAPI
-  # Current gem version
-  VERSION = '0.1.0'
+  module V2
+    class User < Resource
+    end
+  end
 end

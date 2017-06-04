@@ -2,10 +2,10 @@
 
 require 'spec_helper'
 
-module FrederickApi::V2::Models
-  RSpec.describe BaseResource do
+module FrederickAPI::V2
+  RSpec.describe Resource do
     let(:subclass) do
-      Class.new(BaseResource)
+      Class.new(Resource)
     end
     let(:instance) { subclass.new }
 
@@ -16,23 +16,23 @@ module FrederickApi::V2::Models
     end
 
     describe '.query_builder' do
-      it 'FrederickApi::Utils::JsonApiQueryBuilder' do
-        expect(described_class.query_builder).to be FrederickApi::Utils::JsonApiQueryBuilder
+      it 'FrederickAPI::V2::QueryBuilder' do
+        expect(described_class.query_builder).to be FrederickAPI::V2::QueryBuilder
       end
     end
 
     describe 'methods' do
       it 'responds to #create' do
-        expect(BaseResource).to respond_to('create')
+        expect(subclass).to respond_to('create')
       end
       it 'responds to #find' do
-        expect(BaseResource).to respond_to('find')
+        expect(subclass).to respond_to('find')
       end
       it 'responds to #all' do
-        expect(BaseResource).to respond_to('all')
+        expect(subclass).to respond_to('all')
       end
       it 'responds to #where' do
-        expect(BaseResource).to respond_to('where')
+        expect(subclass).to respond_to('where')
       end
     end
 

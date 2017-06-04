@@ -7,7 +7,7 @@ require 'frederick_api/version'
 
 Gem::Specification.new do |spec|
   spec.name          = 'frederick_api'
-  spec.version       = FrederickApi::VERSION
+  spec.version       = FrederickAPI::VERSION
   spec.authors       = ['Frederick Engineering']
   spec.email         = ['tech@hirefrederick.com']
 

@@ -2,10 +2,10 @@
 
 require 'active_support/core_ext/module'
 
-module FrederickApi
-  module Utils
+module FrederickAPI
+  module V2
     # Used to convert nested params to dot notation for Frederick API
-    class JsonApiQueryBuilder < JsonApiClient::Query::Builder
+    class QueryBuilder < JsonApiClient::Query::Builder
       def params
         to_dot_params(
           filter_params.merge(pagination_params.merge(includes_params).merge(select_params))

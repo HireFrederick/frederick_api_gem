@@ -5,13 +5,14 @@ $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
 require 'byebug'
 require 'webmock/rspec'
 require 'frederick_api'
+require 'support/v2_resource_shared_examples'
 
 configuration_proc = proc do |c|
   c.base_url = 'http://test.host'
   c.api_key = '1234-5678-8765-4321'
 end
 
-FrederickApi.configure(&configuration_proc)
+FrederickAPI.configure(&configuration_proc)
 
 RSpec.configure do |config|
   config.expect_with :rspec do |expectations|
