@@ -1,0 +1,163 @@
+# Run rubocop --auto-gen-config to generate .rubocop_todo.yml
+# Run rubocop --auto-correct to have rubocop auto fix all offenses (Use this feature carefully!)
+# Enable rubocop todos to go through them one by one
+# For how to get started with rubocop, see: https://buildtoship.com/integrate-rubocop-in-your-workflow/
+
+require:
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 2.3
+  # Cop names are not displayed in offense messages by default. Change behavior
+  # by overriding DisplayCopNames, or by giving the -D/--display-cop-names
+  # option.
+  DisplayCopNames: true
+  # Style guide URLs are not displayed in offense messages by default. Change
+  # behavior by overriding DisplayStyleGuide, or by giving the
+  # -S/--display-style-guide option.
+  DisplayStyleGuide: true
+  # Exclude certain files
+  Exclude:
+    - 'vendor/**/*'
+    - 'db/**/*'
+    - 'tmp/**/*'
+    - 'bin/**/*'
+    - 'log/**/*'
+    - 'client/**/*'
+    - 'node_modules/**/*'
+
+################################## Style ##################################
+
+# Enable, Disable, and Edit styles below
+# Default rubocop styles can be found at https://github.com/bbatsov/rubocop/blob/master/config/default.yml
+# Copy styles from above url or .rubocop_todo.yml and only change specific rules (suggest using comments from both)
+
+Metrics/AbcSize:
+  Max: 20
+
+RSpec/NestedGroups:
+  Max: 6
+
+# Configuration parameters: CountComments.
+Metrics/MethodLength:
+  Max: 20
+
+Metrics/LineLength:
+  Max: 120
+
+Style/MultilineMethodCallIndentation:
+  Exclude:
+    - 'spec/**/*'
+
+# Checks the indentation of the first element in an array literal.
+Style/IndentArray:
+  Enabled: false
+
+# Cop supports --auto-correct.
+# Configuration parameters: AllowIfMethodIsEmpty.
+Style/SingleLineMethods:
+  Enabled: false
+
+# Cop supports --auto-correct.
+# Configuration parameters: EnforcedStyle, SupportedStyles, IndentationWidth.
+# SupportedStyles: aligned, indented
+Style/MultilineOperationIndentation:
+  EnforcedStyle: indented
+
+Style/IndentationConsistency:
+  # The difference between `rails` and `normal` is that the `rails` style
+  # prescribes that in classes and modules the `protected` and `private`
+  # modifier keywords shall be indented the same as public methods and that
+  # protected and private members shall be indented one step more than the
+  # modifiers. Other than that, both styles mean that entities on the same
+  # logical depth shall have the same indentation.
+  EnforcedStyle: rails
+
+# Document classes and non-namespace modules.
+Style/Documentation:
+  Exclude:
+    - 'spec/**/*'
+    - 'config/*'
+    - 'config/locales/*'
+
+# Cop supports --auto-correct.
+# Configuration parameters: AllowUnusedKeywordArguments, IgnoreEmptyMethods.
+Lint/UnusedMethodArgument:
+  Exclude:
+    - 'config/initializers/sidekiq.rb'
+
+Style/EmptyLinesAroundAccessModifier:
+  Enabled: false
+
+# Cop supports --auto-correct.
+Style/RedundantSelf:
+  Enabled: false
+
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+# SupportedStyles: nested, compact
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+# Check that instances are not being stubbed globally
+RSpec/AnyInstance:
+  Enabled: false
+
+# Configuration parameters: Max.
+RSpec/ExampleLength:
+  Max: 10
+
+
+################################## EXCLUDED ##################################
+
+Style/AccessorMethodName:
+  Exclude:
+    - 'app/controllers/api/v1/api_controller.rb'
+
+RSpec/MultipleDescribes:
+  Exclude:
+    - 'spec/controllers/api/v1/api_controller_spec.rb'
+
+Lint/UnusedMethodArgument:
+  Exclude:
+    - 'config/initializers/sidekiq.rb'
+    - 'app/controllers/application_controller.rb'
+
+RSpec/DescribeClass:
+  Exclude:
+    - 'spec/lib/tasks/**/*'
+    - 'spec/integration/*.rb'
+RSpec/DescribedClass:
+  Exclude:
+    - '**/*'
+Style/TrailingCommaInLiteral:
+  Exclude:
+    - 'spec/**/*'
+    - 'app/**/*'
+    - '**/*'
+Style/TrailingCommaInArguments:
+  Exclude:
+    - 'spec/**/*'
+    - 'app/**/*'
+    - '**/*'
+Style/FrozenStringLiteralComment:
+  Exclude:
+    - 'app/views/*'
+RSpec/MessageExpectation:
+  Exclude:
+    - 'spec/**/*'
+RSpec/FilePath:
+  Exclude:
+    - 'spec/**/*'
+RSpec/MultipleExpectations:
+  Exclude:
+    - 'spec/**/*'
+RSpec/ExampleLength:
+  Exclude:
+    - 'spec/**/*'
+    - '**/*'
+Metrics/ModuleLength:
+  Exclude:
+    - '**/*'
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*'

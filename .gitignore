@@ -1,0 +1,12 @@
+.idea
+/.bundle/
+/.yardoc
+/_yardoc/
+/coverage/
+/doc/
+/pkg/
+/spec/reports/
+/tmp/
+.DS_Store
+.byebug_history
+spec/examples.txt

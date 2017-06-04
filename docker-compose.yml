@@ -1,0 +1,7 @@
+version: '2'
+services:
+  # Main application, starts up by default
+  main:
+    build: .
+    volumes:
+      - ./:/frederick_api_gem
