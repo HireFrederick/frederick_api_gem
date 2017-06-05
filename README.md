@@ -67,7 +67,7 @@ location_id = '6fdf0530-3e4e-46f1-9d11-5f90c48a50dc'
 access_token = '9jsdo320fjfkfdksls30dfdcd919bcaa1b7804dbbebda0'
 FrederickAPI::V2::Location.with_access_token(access_token) do
   # Fetch a location
-  location = FrederickAPI::V2::Location.find(location_id)
+  location = FrederickAPI::V2::Location.find(location_id).first
   # => #<FrederickAPI::V2::Location:0x007fd2f29a7618>
   
   location.name
