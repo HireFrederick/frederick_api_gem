@@ -9,4 +9,4 @@
 /tmp/
 .DS_Store
 .byebug_history
-spec/examples.txt
+*.gem
