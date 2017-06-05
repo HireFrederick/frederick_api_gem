@@ -62,13 +62,12 @@ filter, sort, and include relationships.
 An access token is required to access resources on behalf of a use. Use `Resource.with_access_token { ... }` to make
 requests with an access token.
 
-
 ```ruby
-# Fetch a location
-id = '6fdf0530-3e4e-46f1-9d11-5f90c48a50dc'
+location_id = '6fdf0530-3e4e-46f1-9d11-5f90c48a50dc'
 access_token = '9jsdo320fjfkfdksls30dfdcd919bcaa1b7804dbbebda0'
 FrederickAPI::V2::Location.with_access_token(access_token) do
-  location = FrederickAPI::V2::Location.find(id)
+  # Fetch a location
+  location = FrederickAPI::V2::Location.find(location_id)
   # => #<FrederickAPI::V2::Location:0x007fd2f29a7618>
   
   location.name
@@ -80,7 +79,7 @@ FrederickAPI::V2::Location.with_access_token(access_token) do
   # => true
   
   # To instantiate a resource for update without fetching it first, set an id
-  location = FrederickAPI::V2::Location.new(id: id)
+  location = FrederickAPI::V2::Location.new(id: location_id)
   location.update_attributes(phone_number: '(555) 555-5555')
   # => true
 end
