@@ -11,6 +11,13 @@ require 'frederick_api/v2/resource'
 require 'frederick_api/v2/user'
 require 'frederick_api/v2/location'
 
+# Froldoex resources
+require 'frederick_api/v2/contact'
+require 'frederick_api/v2/contact_property'
+require 'frederick_api/v2/contact_list'
+require 'frederick_api/v2/contact_type'
+require 'frederick_api/v2/interaction'
+
 # Namespace for all Frederick API client methods/classes
 module FrederickAPI
 end
