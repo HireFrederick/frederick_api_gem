@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     frederick_api (0.1.0)
-      json_api_client (>= 1.5.1)
+      json_api_client (~> 1.5.1)
 
 GEM
   remote: https://rubygems.org/
