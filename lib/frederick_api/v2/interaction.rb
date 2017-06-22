@@ -2,6 +2,7 @@
 
 module FrederickAPI
   module V2
+    # /v2/locations/:location_id/interactions
     class Interaction < Resource
       belongs_to :location
     end
