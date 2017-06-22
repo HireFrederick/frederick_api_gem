@@ -78,8 +78,8 @@ FrederickAPI::V2::Location.with_access_token(access_token) do
   location.save
   # => true
   
-  # To instantiate a resource for update without fetching it first, set an id
-  location = FrederickAPI::V2::Location.new(id: location_id)
+  # To instantiate a resource for update without fetching it first, use `.load` with id
+  location = FrederickAPI::V2::Location.load(id: location_id)
   location.update_attributes(phone_number: '(555) 555-5555')
   # => true
 end
