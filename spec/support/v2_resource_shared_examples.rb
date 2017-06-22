@@ -7,3 +7,9 @@ RSpec.shared_examples 'v2_resource' do
     end
   end
 end
+
+RSpec.shared_examples 'belongs_to :location' do
+  it 'belongs_to :location' do
+    expect(described_class.path).to include('location_id')
+  end
+end

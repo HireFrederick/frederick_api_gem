@@ -5,5 +5,6 @@ require 'spec_helper'
 module FrederickAPI::V2
   RSpec.describe ContactProperty do
     it_behaves_like 'v2_resource'
+    it_behaves_like 'belongs_to :location'
   end
 end

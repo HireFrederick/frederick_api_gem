@@ -84,3 +84,17 @@ FrederickAPI::V2::Location.with_access_token(access_token) do
   # => true
 end
 ```
+
+### Nested Resources
+
+Nested resources must be accessed using `where` to scope the request:
+
+```ruby
+location_id = '6fdf0530-3e4e-46f1-9d11-5f90c48a50dc'
+access_token = '9jsdo320fjfkfdksls30dfdcd919bcaa1b7804dbbebda0'
+FrederickAPI::V2::Location.with_access_token(access_token) do
+  # Find contacts
+  contacts = FrederickAPI::V2::Contact.where(location_id: location_id).page(1).per(100).to_a
+  # => [...]
+end
+```
