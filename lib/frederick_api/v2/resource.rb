@@ -6,6 +6,14 @@ module FrederickAPI
     # Inherits functionality from JsonApiClient::Resource
     class Resource < JsonApiClient::Resource
       self.query_builder = FrederickAPI::V2::QueryBuilder
+      self.paginator = FrederickAPI::V2::Paginator
+
+      attr_accessor :custom_headers
+
+      def initialize(params = {})
+        self.custom_headers = self.class.custom_headers
+        super
+      end
 
       def self.site
         "#{FrederickAPI.config.base_url}/v2/"

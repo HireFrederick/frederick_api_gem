@@ -76,25 +76,110 @@ module FrederickAPI::V2
             'sort=created_at'
           ].join
         end
-
-        before do
-          stub_request(:get, "#{base_url}?#{query_params}")
-            .with(headers: request_headers)
+        let(:id) { SecureRandom.uuid }
+        let(:id2) { SecureRandom.uuid }
+        let(:id3) { SecureRandom.uuid }
+        let(:email) { 'user_email@gmail.com' }
+        let(:email2) { 'user_email2@gmail.com' }
+        let(:email3) { 'user_email3@gmail.com' }
+        let(:last_link) { "#{base_url}?page.number=3&page.size=1" }
+        let(:next_link_obj) { { 'next': last_link } }
+        let(:links) do
+          {
+            'last': last_link
+          }.merge(next_link_obj)
+        end
+        let(:user_resp) do
+          {
+            'id': id,
+            'type': 'users',
+            'links': {},
+            'attributes': {
+              'email': email
+            },
+            'relationships': {}
+          }
+        end
+        let(:user_resp2) do
+          user_resp.merge('id': id2, 'attributes': { 'email': email2 })
+        end
+        let(:user_resp3) do
+          user_resp.merge('id': id3, 'attributes': { 'email': email3 })
+        end
+        let(:body) { { "data": [user_resp], "links": links }.to_json }
+        let(:body2) { { "data": [user_resp2, user_resp3], "links": links }.to_json }
+        let(:base_resp) { { status: 200, headers: { content_type: 'application/vnd.api+json' } } }
+        let(:result) do
           resource.with_access_token(access_token) do
             resource.where(first_name: first_name)
-                    .page(2)
-                    .per(30)
-                    .order('created_at')
-                    .select('first_name')
-                    .includes(:permitted_locations)
-                    .all
+              .page(2)
+              .per(30)
+              .order('created_at')
+              .select('first_name')
+              .includes(:permitted_locations)
+              .all
           end
         end
 
-        it 'makes request with correct query params format' do
-          expect(
-            a_request(:get, "#{base_url}?#{query_params}")
-          ).to have_been_made.once
+        before do
+          stub_request(:get, "#{base_url}?#{query_params}")
+            .with(headers: request_headers).to_return(base_resp.merge(body: body))
+        end
+
+        context 'all records not called on result set' do
+          it 'makes request with correct query params format' do
+            result
+            expect(a_request(:get, "#{base_url}?#{query_params}")).to have_been_made.once
+            expect(a_request(:get, last_link)).not_to have_been_made
+          end
+
+          it 'returns right parsed resp' do
+            expect(result.length).to eq 1
+
+            expect(result.first.class).to eq resource
+            expect(result.first.id).to eq id
+            expect(result.first.email).to eq email
+          end
+        end
+
+        context 'all records called on result set' do
+          let(:pagination_result) { result.pages.all_records }
+
+          before do
+            stub_request(:get, last_link)
+              .with(headers: request_headers)
+              .to_return(base_resp.merge(body: body2))
+          end
+
+          it 'makes request with correct query params format' do
+            pagination_result
+            expect(a_request(:get, "#{base_url}?#{query_params}")).to have_been_made.once
+            expect(a_request(:get, last_link)).to have_been_made.once
+          end
+
+          it 'returns right parsed resp' do
+            expect(pagination_result.length).to eq 3
+            pagination_result.each { |bc| expect(bc.class).to eq resource }
+
+            expect(pagination_result.first.id).to eq id
+            expect(pagination_result.first.email).to eq email
+
+            expect(pagination_result.second.id).to eq id2
+            expect(pagination_result.second.email).to eq email2
+
+            expect(pagination_result.third.id).to eq id3
+            expect(pagination_result.third.email).to eq email3
+          end
+
+          context 'next link not found' do
+            let(:next_link_obj) { {} }
+
+            it 'raises, does not make next request' do
+              expect { pagination_result }.to raise_error(StandardError, 'next link not found')
+              expect(a_request(:get, "#{base_url}?#{query_params}")).to have_been_made.once
+              expect(a_request(:get, last_link)).not_to have_been_made
+            end
+          end
         end
       end
     end
