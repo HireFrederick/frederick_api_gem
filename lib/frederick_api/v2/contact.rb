@@ -5,7 +5,7 @@ module FrederickAPI
     # /v2/locations/:location_id/contacts
     class Contact < Resource
       belongs_to :location
-      self.read_only_attributes << :location_id
+      self.read_only_attributes += [:location_id]
     end
   end
 end
