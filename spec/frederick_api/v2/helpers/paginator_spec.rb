@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-describe FrederickAPI::V2::Paginator do
+describe FrederickAPI::V2::Helpers::Paginator do
   let(:data) { {} }
   let(:first_result) { FrederickAPI::V2::Resource.new }
   let(:result) { [first_result, 'b'] }
