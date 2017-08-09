@@ -6,8 +6,9 @@ require 'active_support/core_ext/class/attribute.rb'
 
 # FrederickAPI libs
 require 'frederick_api/configuration'
-require 'frederick_api/v2/paginator'
-require 'frederick_api/v2/query_builder'
+require 'frederick_api/v2/helpers/paginator'
+require 'frederick_api/v2/helpers/query_builder'
+require 'frederick_api/v2/helpers/requestor'
 require 'frederick_api/v2/resource'
 
 require 'frederick_api/v2/user'

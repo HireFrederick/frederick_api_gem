@@ -16,8 +16,20 @@ module FrederickAPI::V2
     end
 
     describe '.query_builder' do
-      it 'FrederickAPI::V2::QueryBuilder' do
-        expect(described_class.query_builder).to be FrederickAPI::V2::QueryBuilder
+      it 'FrederickAPI::V2::Helpers::QueryBuilder' do
+        expect(described_class.query_builder).to be FrederickAPI::V2::Helpers::QueryBuilder
+      end
+    end
+
+    describe '.paginator' do
+      it 'FrederickAPI::V2::Helpers::Paginator' do
+        expect(described_class.paginator).to be FrederickAPI::V2::Helpers::Paginator
+      end
+    end
+
+    describe '.requestor_class' do
+      it 'FrederickAPI::V2::Helpers::Requestor' do
+        expect(described_class.requestor_class).to be FrederickAPI::V2::Helpers::Requestor
       end
     end
 
