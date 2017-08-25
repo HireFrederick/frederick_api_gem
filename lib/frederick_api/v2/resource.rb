@@ -21,7 +21,7 @@ module FrederickAPI
       end
 
       def self.top_level_namespace
-        self.to_s.split('::').first.constantize
+        @top_level_namespace ||= self.to_s.split('::').first.constantize
       end
 
       def self.site
