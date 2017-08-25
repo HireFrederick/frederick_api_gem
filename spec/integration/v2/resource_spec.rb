@@ -2,7 +2,6 @@
 
 require 'spec_helper'
 
-
 describe FrederickAPI::V2::Resource, :integration do
   let(:resource) { FrederickAPI::V2::User }
   let(:first_name) { 'user' }
