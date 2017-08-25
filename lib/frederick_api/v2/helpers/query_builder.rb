@@ -16,6 +16,22 @@ module FrederickAPI
             .merge(additional_params)
         end
 
+        def filter_params
+          super_filter_params = super
+
+          if (filters = super_filter_params[:filter])
+            filters.each do |filter_name, filter_val|
+              filters[filter_name] = filter_val.join(',') if filter_val.is_a?(Array)
+            end
+          end
+
+          super_filter_params
+        end
+
+        def all_records
+          self.all.pages.all_records
+        end
+
         def to_dot_params(object, prefix = nil)
           return {} if object == {}
 

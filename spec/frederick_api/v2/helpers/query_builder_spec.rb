@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe FrederickAPI::V2::Helpers::QueryBuilder do
+describe FrederickAPI::V2::Helpers::QueryBuilder do
   let(:query_builder) { described_class.new('klass') }
 
   describe '#params' do
@@ -27,6 +27,30 @@ RSpec.describe FrederickAPI::V2::Helpers::QueryBuilder do
 
     it 'returns correct hash' do
       expect(query_builder.params).to eq result
+    end
+  end
+
+  describe '#filter_params' do
+    let(:filter_array) { ['b', 1] }
+    let(:filters) { { foo: 'bar', c: true, a: filter_array } }
+    let(:query_builder) { FrederickAPI::V2::User.where(filters) }
+
+    it 'transforms arrays into comma delimited strings' do
+      expect(query_builder.filter_params).to eq(filter: filters.merge(a: filter_array.join(',')))
+    end
+  end
+
+  describe '#all_records' do
+    let(:result_set) { JsonApiClient::ResultSet.new }
+    let(:paginator) { FrederickAPI::V2::Helpers::Paginator.new(result_set, {}) }
+    let(:all_records) { 'all_records' }
+
+    after { expect(query_builder.all_records).to eq all_records }
+
+    it 'call right method chain' do
+      expect(query_builder).to receive(:all).with(no_args).and_return(result_set).ordered
+      expect(result_set).to receive(:pages).with(no_args).and_return(paginator).ordered
+      expect(paginator).to receive(:all_records).with(no_args).and_return(all_records).ordered
     end
   end
 

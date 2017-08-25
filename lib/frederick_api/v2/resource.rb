@@ -16,8 +16,16 @@ module FrederickAPI
         super
       end
 
+      def self.all_records
+        self.all.pages.all_records
+      end
+
+      def self.top_level_namespace
+        self.to_s.split('::').first.constantize
+      end
+
       def self.site
-        "#{FrederickAPI.config.base_url}/v2/"
+        "#{top_level_namespace.config.base_url}/v2/"
       end
 
       def self.with_access_token(token)
@@ -27,7 +35,7 @@ module FrederickAPI
       end
 
       def self.custom_headers
-        super.merge(x_api_key: FrederickAPI.config.api_key)
+        super.merge(x_api_key: top_level_namespace.config.api_key)
       end
     end
   end
