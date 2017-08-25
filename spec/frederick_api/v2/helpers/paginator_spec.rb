@@ -40,14 +40,12 @@ describe FrederickAPI::V2::Helpers::Paginator do
       rs
     end
 
-    # rubocop:disable RSpec/MessageSpies
     before do
       expect(paginator).to receive(:current_page).with(no_args).and_return(current_page)
       expect(paginator).to receive(:total_pages).with(no_args).and_return(total_pages)
       expect(paginator).to receive(:next).with(no_args).and_return(new_result_set)
       expect(paginator).to receive(:next).with(no_args).and_return(new_result_set2)
     end
-    # rubocop:enable RSpec/MessageSpies
 
     it 'aggregates all the remaining pages' do
       expect(paginator.all_records).to eq(result + result2 + result3)
