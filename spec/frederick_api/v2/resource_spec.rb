@@ -60,7 +60,7 @@ describe FrederickAPI::V2::Resource do
   end
 
   describe '.top_level_namespace' do
-    it 'should eq right constant' do
+    it 'eqs right constant' do
       expect(subclass.top_level_namespace).to eq FrederickAPI
     end
   end
