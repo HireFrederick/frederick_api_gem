@@ -13,13 +13,16 @@ module FrederickAPI # :nodoc:
     DEFAULTS = {
       base_url: ENV['FREDERICK_API_BASE_URL'] ||
         'https://api.staging.hirefrederick.com',
+      public_base_url: ENV['FREDERICK_API_PUBLIC_BASE_URL'] ||
+        'https://api.public.staging.hirefrederick.com',
       api_key: ENV['FREDERICK_API_KEY']
     }.freeze
 
-    attr_accessor :base_url, :api_key
+    attr_accessor :base_url, :public_base_url, :api_key
 
     def initialize
       @base_url = DEFAULTS[:base_url]
+      @public_base_url = DEFAULTS[:public_base_url]
       @api_key = DEFAULTS[:api_key]
     end
   end

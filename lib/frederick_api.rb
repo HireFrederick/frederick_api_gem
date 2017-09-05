@@ -10,9 +10,13 @@ require 'frederick_api/v2/helpers/paginator'
 require 'frederick_api/v2/helpers/query_builder'
 require 'frederick_api/v2/helpers/requestor'
 require 'frederick_api/v2/resource'
+require 'frederick_api/v2/public_resource'
 
 require 'frederick_api/v2/user'
 require 'frederick_api/v2/location'
+
+# Public resources
+require 'frederick_api/v2/business_category'
 
 # Froldoex resources
 require 'frederick_api/v2/contact'

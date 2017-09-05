@@ -6,9 +6,11 @@ require 'byebug'
 require 'webmock/rspec'
 require 'frederick_api'
 require 'support/v2_resource_shared_examples'
+require 'support/v2_public_resource_shared_examples'
 
 configuration_proc = proc do |c|
   c.base_url = 'http://test.host'
+  c.public_base_url = 'http://public.test.host'
   c.api_key = '1234-5678-8765-4321'
 end
 

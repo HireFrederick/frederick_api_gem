@@ -34,6 +34,7 @@ to configure the Frederick API client.
 ...
 FrederickAPI.configure do |c|
   c.base_url = 'https://api.hirefrederick.com'
+  c.public_base_url = 'https://api.public.hirefrederick.com'
   c.api_key = '1234-5678-1234-5678-1234-5678'
 end
 ...
@@ -41,10 +42,12 @@ end
 
 Environment variables can also be used:
   * `FREDERICK_API_BASE_URL`: Same as `base_url` above
+  * `FREDERICK_API_PUBLIC_BASE_URL`: Same as `public_base_url` above
   * `FREDERICK_API_KEY`: Same as `api_key` above
   
 Environments:
   * For testing (default), use `FREDERICK_API_BASE_URL = https://api.staging.hirefrederick.com`
+  and `FREDERICK_API_PUBLIC_BASE_URL = https://api.public.staging.hirefrederick.com`
   * For production, use `FREDERICK_API_BASE_URL = https://api.hirefrederick.com`
   
 NOTE: You must specify the production base URL of `https://api.hirefrederick.com` in order to use this gem with
