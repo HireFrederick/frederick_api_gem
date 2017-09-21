@@ -19,6 +19,7 @@ require 'frederick_api/v2/location'
 require 'frederick_api/v2/business_category'
 
 # Froldoex resources
+require 'frederick_api/v2/automation'
 require 'frederick_api/v2/contact'
 require 'frederick_api/v2/contact_property'
 require 'frederick_api/v2/contact_list'
