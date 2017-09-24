@@ -9,8 +9,8 @@ group :development, :test do
   gem 'byebug'
   gem 'rake'
   gem 'rspec'
-  gem 'rubocop', require: false
-  gem 'rubocop-rspec', require: false
+  gem 'rubocop', '0.49.1', require: false
+  gem 'rubocop-rspec', '1.15.1', require: false
   gem 'webmock'
   gem 'yard'
 end
