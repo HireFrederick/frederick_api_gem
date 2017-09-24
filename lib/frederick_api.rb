@@ -2,10 +2,12 @@
 
 # Third-party libs
 require 'json_api_client'
-require 'active_support/core_ext/class/attribute.rb'
+require 'active_support/core_ext/class/attribute'
+require 'active_support/concern'
 
 # FrederickAPI libs
 require 'frederick_api/configuration'
+require 'frederick_api/v2/helpers/has_many'
 require 'frederick_api/v2/helpers/paginator'
 require 'frederick_api/v2/helpers/query_builder'
 require 'frederick_api/v2/helpers/requestor'

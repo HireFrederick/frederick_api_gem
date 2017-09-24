@@ -7,6 +7,13 @@ module FrederickAPI
     module Helpers
       # Used to convert nested params to dot notation for Frederick API
       class QueryBuilder < JsonApiClient::Query::Builder
+        attr_reader :requestor
+
+        def initialize(klass, requestor = nil)
+          super(klass)
+          @requestor = requestor || klass.requestor
+        end
+
         def params
           to_dot_params(
             filter_params.merge(pagination_params.merge(includes_params).merge(select_params))
@@ -14,6 +21,17 @@ module FrederickAPI
             .merge(primary_key_params)
             .merge(path_params)
             .merge(additional_params)
+        end
+
+        def find(args = {})
+          case args
+          when Hash
+            where(args)
+          else
+            @primary_key = args
+          end
+
+          requestor.get(params)
         end
 
         def filter_params

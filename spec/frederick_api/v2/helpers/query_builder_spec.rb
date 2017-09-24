@@ -3,7 +3,25 @@
 require 'spec_helper'
 
 describe FrederickAPI::V2::Helpers::QueryBuilder do
-  let(:query_builder) { described_class.new('klass') }
+  let(:resource_class) { FrederickAPI::V2::Resource }
+  let(:query_builder) { described_class.new(resource_class) }
+
+  describe '#initialize' do
+    let(:requestor) { FrederickAPI::V2::Helpers::Requestor.new(resource_class) }
+    let(:query_builder) { described_class.new(resource_class, requestor) }
+
+    it 'accepts optional requestor' do
+      expect(query_builder.requestor).to eq requestor
+    end
+
+    context 'without a requester' do
+      let(:query_builder) { described_class.new(resource_class) }
+
+      it 'uses resource_class default requestor' do
+        expect(query_builder.requestor).to eq query_builder.requestor
+      end
+    end
+  end
 
   describe '#params' do
     let(:result) do
@@ -37,6 +55,39 @@ describe FrederickAPI::V2::Helpers::QueryBuilder do
 
     it 'transforms arrays into comma delimited strings' do
       expect(query_builder.filter_params).to eq(filter: filters.merge(a: filter_array.join(',')))
+    end
+  end
+
+  describe '#find' do
+    let(:requestor) { FrederickAPI::V2::Helpers::Requestor.new(resource_class) }
+    let(:query_builder) { described_class.new(resource_class, requestor) }
+    let(:result) { query_builder.find }
+    let(:params) { 'params' }
+    let(:resp) { 'response' }
+    let(:args) { {} }
+
+    before do
+      allow(query_builder).to receive(:params).and_return params
+      allow(query_builder).to receive(:where).with(args)
+      allow(requestor).to receive(:get).with(params).and_return resp
+    end
+
+    it 'returns response' do
+      expect(result).to be resp
+      expect(query_builder).to have_received(:where).with(args)
+      expect(requestor).to have_received(:get).with(params)
+    end
+
+    context 'args are not a Hash' do
+      let(:result) { query_builder.find(args) }
+      let(:args) { 'foo' }
+
+      it 'sets @primary_key, returns response' do
+        expect(result).to be resp
+        expect(query_builder).not_to have_received(:where)
+        expect(requestor).to have_received(:get).with(params)
+        expect(query_builder.instance_variable_get(:@primary_key)).to eq args
+      end
     end
   end
 

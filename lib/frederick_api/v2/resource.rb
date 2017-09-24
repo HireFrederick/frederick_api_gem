@@ -5,6 +5,8 @@ module FrederickAPI
     # Class from which Frederick V2 Resources inherit
     # Inherits functionality from JsonApiClient::Resource
     class Resource < JsonApiClient::Resource
+      include FrederickAPI::V2::Helpers::HasMany
+
       self.query_builder = FrederickAPI::V2::Helpers::QueryBuilder
       self.paginator = FrederickAPI::V2::Helpers::Paginator
       self.requestor_class = FrederickAPI::V2::Helpers::Requestor

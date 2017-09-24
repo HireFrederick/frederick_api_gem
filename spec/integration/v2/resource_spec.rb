@@ -209,4 +209,52 @@ describe FrederickAPI::V2::Resource, :integration do
       ).to have_been_made.once
     end
   end
+
+  describe 'has_many association' do
+    let(:resource) { FrederickAPI::V2::ContactList }
+
+    before do
+      stub_request(:get, 'http://test.host/v2/locations/123/contact_lists?page.number=1&page.size=1')
+        .to_return(headers: { content_type: 'application/vnd.api+json' }, body: {
+          data: [
+            {
+              id: 1,
+              attributes: {
+                name: 'all_contacts',
+              },
+              relationships: {
+                contacts: {
+                  links: {
+                    self: 'http://test.host/v2/locations/123/contact_lists/relationships/contacts',
+                    related: 'http://test.host/v2/locations/123/contact_lists/contacts'
+                  }
+                }
+              }
+            }
+          ]
+        }.to_json)
+      stub_request(:get, 'http://test.host/v2/locations/123/contact_lists/contacts')
+        .with(headers: { 'Accept' => 'application/vnd.api+json',
+                         'Content-Type' => 'application/vnd.api+json', 'X-Api-Key' => '1234-5678-8765-4321' })
+        .to_return(status: 200, headers: { content_type: 'application/vnd.api+json' }, body: {
+          data: [
+            {
+              id: 1,
+              attributes: {
+                name: 'contact one',
+              }
+            }
+          ]
+        }.to_json)
+    end
+
+    it 'returns query builder' do
+      list = resource.where(location_id: '123').first
+      query_builder = list.contacts
+      expect(query_builder).to be_a FrederickAPI::V2::Helpers::QueryBuilder
+      first_contact = query_builder.all.first
+      expect(first_contact).to be_a FrederickAPI::V2::Contact
+      expect(first_contact.name).to eq 'contact one'
+    end
+  end
 end

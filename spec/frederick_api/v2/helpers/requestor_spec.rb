@@ -4,10 +4,43 @@ require 'spec_helper'
 
 describe FrederickAPI::V2::Helpers::Requestor do
   let(:superklass) { JsonApiClient::Query::Requestor }
-  let(:requestor) { described_class.new(String) }
+  let(:resource) { FrederickAPI::V2::Contact }
+  let(:requestor) { described_class.new(resource) }
 
   it 'has right superclass' do
     expect(described_class.superclass).to eq superklass
+  end
+
+  describe '#initialize' do
+    let(:requestor) { described_class.new(resource, '/foo') }
+
+    it 'sets path' do
+      expect(requestor.path).to eq '/foo'
+    end
+  end
+
+  describe '#resource_path' do
+    let(:params) { { location_id: '123' } }
+
+    it 'returns resource path' do
+      expect(requestor.resource_path(params)).to eq 'locations/123/contacts'
+    end
+
+    context 'id in params' do
+      let(:params) { { location_id: '123', id: '456' } }
+
+      it 'returns resource path' do
+        expect(requestor.resource_path(params)).to eq 'locations/123/contacts/456'
+      end
+    end
+
+    context 'path passed in' do
+      let(:requestor) { described_class.new(resource, '/foo') }
+
+      it 'path' do
+        expect(requestor.resource_path(params)).to eq '/foo'
+      end
+    end
   end
 
   describe '#request' do

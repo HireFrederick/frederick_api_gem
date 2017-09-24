@@ -106,6 +106,9 @@ RSpec/AnyInstance:
 RSpec/ExampleLength:
   Max: 10
 
+Style/PredicateName:
+  Enabled: false
+
 
 ################################## EXCLUDED ##################################
 
