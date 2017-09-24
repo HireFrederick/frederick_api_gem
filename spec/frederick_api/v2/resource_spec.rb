@@ -70,6 +70,7 @@ describe FrederickAPI::V2::Resource do
 
     it 'merges api key' do
       expect(subclass.custom_headers[:x_api_key]).to eq('1234-5678-8765-4321')
+      expect(subclass.custom_headers[:existing]).to eq('headers')
     end
   end
 
@@ -77,6 +78,21 @@ describe FrederickAPI::V2::Resource do
     context 'config base_url is set' do
       it 'is assigned correctly' do
         expect(described_class.site).to eq 'http://test.host/v2/'
+      end
+    end
+  end
+
+  describe '._header_store' do
+    it '{} by default' do
+      expect(described_class._header_store).to eq({})
+    end
+
+    context 'thread current present' do
+      before { Thread.current['frederick_api_header_store'] = { foo: 'bar' } }
+      after { Thread.current['frederick_api_header_store'] = nil }
+
+      it 'thread current' do
+        expect(described_class._header_store).to eq(foo: 'bar')
       end
     end
   end

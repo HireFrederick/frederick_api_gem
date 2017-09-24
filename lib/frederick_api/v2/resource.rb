@@ -37,6 +37,10 @@ module FrederickAPI
       def self.custom_headers
         super.merge(x_api_key: top_level_namespace.config.api_key)
       end
+
+      def self._header_store
+        Thread.current['frederick_api_header_store'] ||= {}
+      end
     end
   end
 end
