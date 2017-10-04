@@ -6,6 +6,7 @@ module FrederickAPI
     class Interaction < Resource
       belongs_to :location
       has_one :contact
+      has_one :attributed_to_interaction
 
       self.read_only_attributes += [:location_id]
     end
