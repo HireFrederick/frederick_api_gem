@@ -7,6 +7,7 @@ require 'active_support/concern'
 
 # FrederickAPI libs
 require 'frederick_api/configuration'
+require 'frederick_api/v2/errors/errors'
 require 'frederick_api/v2/helpers/has_many'
 require 'frederick_api/v2/helpers/paginator'
 require 'frederick_api/v2/helpers/query_builder'

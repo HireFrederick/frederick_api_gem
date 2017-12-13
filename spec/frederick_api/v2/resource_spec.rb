@@ -45,6 +45,22 @@ describe FrederickAPI::V2::Resource do
     end
   end
 
+  describe '#has_errors?' do
+    context 'no errors' do
+      it 'false' do
+        expect(instance.has_errors?).to be false
+      end
+    end
+
+    context 'with errors' do
+      before { allow(instance).to receive(:errors).and_return 'some errors' }
+
+      it 'true' do
+        expect(instance.has_errors?).to be true
+      end
+    end
+  end
+
   describe '.all_records' do
     let(:result_set) { JsonApiClient::ResultSet.new }
     let(:paginator) { FrederickAPI::V2::Helpers::Paginator.new(result_set, {}) }

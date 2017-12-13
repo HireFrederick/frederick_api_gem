@@ -18,6 +18,10 @@ module FrederickAPI
         super
       end
 
+      def has_errors?
+        self.errors.present?
+      end
+
       def self.all_records
         self.all.pages.all_records
       end

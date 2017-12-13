@@ -45,16 +45,44 @@ describe FrederickAPI::V2::Resource, :integration do
 
   describe 'GET index' do
     context 'with no query params' do
+      let(:resp) do
+        {
+          status: 200,
+          headers: {
+            content_type: 'application/vnd.api+json'
+          },
+          body: {
+            data: [
+              {
+                'id': id,
+                'type': 'users',
+                'links': {},
+                'attributes': {
+                  'email': 'foo@example.com'
+                },
+                'relationships': {}
+              }
+            ]
+          }.to_json
+        }
+      end
+
       before do
         stub_request(:get, base_url)
-          .with(headers: request_headers)
-        resource.with_access_token(access_token) { resource.all }
+          .with(headers: request_headers).to_return(resp)
       end
 
       it 'makes GET request' do
+        resource.with_access_token(access_token) { resource.all }
         expect(
           a_request(:get, base_url)
         ).to have_been_made.once
+      end
+
+      it 'returns data' do
+        expect(
+          resource.with_access_token(access_token) { resource.all }.first
+        ).to be_a FrederickAPI::V2::User
       end
     end
 
@@ -173,6 +201,72 @@ describe FrederickAPI::V2::Resource, :integration do
             expect(a_request(:get, last_link)).not_to have_been_made
           end
         end
+      end
+    end
+
+    context 'bad request error' do
+      let(:resp) do
+        {
+          status: 400,
+          headers: {
+            content_type: 'application/vnd.api+json'
+          },
+          body: {
+            'errors' => [
+              {
+                'title' => 'property `not_a_real_contact_property` does not exist',
+                'detail' => 'properties - property `not_a_real_contact_property` does not exist',
+                'code' => '100',
+                'source' => { 'pointer' => '/data/attributes/properties' },
+                'status' => '400'
+              }
+            ]
+          }.to_json
+        }
+      end
+
+      before do
+        stub_request(:get, base_url)
+          .with(headers: request_headers).to_return(resp)
+      end
+
+      it 'raises' do
+        expect do
+          resource.with_access_token(access_token) { resource.all }.first
+        end.to raise_error FrederickAPI::V2::Errors::BadRequest
+      end
+    end
+
+    context 'unprocessable entity error' do
+      let(:resp) do
+        {
+          status: 422,
+          headers: {
+            content_type: 'application/vnd.api+json'
+          },
+          body: {
+            'errors' => [
+              {
+                'title' => 'property `not_a_real_contact_property` does not exist',
+                'detail' => 'properties - property `not_a_real_contact_property` does not exist',
+                'code' => '100',
+                'source' => { 'pointer' => '/data/attributes/properties' },
+                'status' => '422'
+              }
+            ]
+          }.to_json
+        }
+      end
+
+      before do
+        stub_request(:get, base_url)
+          .with(headers: request_headers).to_return(resp)
+      end
+
+      it 'raises' do
+        expect do
+          resource.with_access_token(access_token) { resource.all }.first
+        end.to raise_error FrederickAPI::V2::Errors::UnprocessableEntity
       end
     end
   end
