@@ -7,8 +7,8 @@ module FrederickAPI
       # Fixes param names for pagination
       # Also adds ability to get all records from a paginated API
       class Paginator < JsonApiClient::Paginating::Paginator
-        self.page_param = 'page.number'
-        self.per_page_param = 'page.size'
+        self.page_param = 'number'
+        self.per_page_param = 'size'
 
         def all_records
           current_result_set = nil
@@ -24,6 +24,28 @@ module FrederickAPI
           end
 
           results
+        end
+
+        def total_pages
+          if links['last']
+            uri = result_set.links.link_url_for('last')
+            last_params = params_for_uri(uri)
+            last_params.fetch("page.#{page_param}") do
+              current_page
+            end.to_i
+          else
+            current_page
+          end
+        end
+
+        def per_page
+          params.fetch("page.#{per_page_param}") do
+            result_set.length
+          end.to_i
+        end
+
+        def current_page
+          params.fetch("page.#{page_param}", 1).to_i
         end
       end
     end

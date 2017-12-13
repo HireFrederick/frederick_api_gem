@@ -19,8 +19,8 @@ describe FrederickAPI::V2::Helpers::Paginator do
 
   describe 'class attrs' do
     it 'has right values set for class attrs' do
-      expect(described_class.page_param).to eq 'page.number'
-      expect(described_class.per_page_param).to eq 'page.size'
+      expect(described_class.page_param).to eq 'number'
+      expect(described_class.per_page_param).to eq 'size'
     end
   end
 
