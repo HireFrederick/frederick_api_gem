@@ -24,6 +24,58 @@ describe FrederickAPI::V2::Helpers::Paginator do
     end
   end
 
+  describe '#total_pages' do
+    let(:links) { {} }
+
+    before do
+      expect(paginator).to receive(:links).and_return links
+    end
+
+    context 'no last link' do
+      it 'current page' do
+        expect(paginator.total_pages).to eq 1
+      end
+    end
+
+    context 'last link exists' do
+      let(:links) { { 'last' => '' } }
+      # let(:links) { OpenStruct.new('last' => '') }
+      let(:last_params) { { 'page.number' => '3' } }
+
+      before do
+        expect(links).to receive(:link_url_for).with('last').and_return 'foo'
+        expect(paginator).to receive(:params_for_uri).with('foo').and_return last_params
+      end
+
+      it 'returns something' do
+        expect(paginator.total_pages).to eq 3
+      end
+    end
+  end
+
+  describe '#per_page' do
+    context 'no per page param' do
+      it 'returns length of result set' do
+        expect(paginator.per_page).to eq 2
+      end
+    end
+
+    context 'per page param exists' do
+      let(:params) { { 'page.size' => '5' } }
+
+      it 'returns per page param' do
+        expect(paginator).to receive(:params).and_return params
+        expect(paginator.per_page).to eq 5
+      end
+    end
+  end
+
+  describe '#current_page' do
+    it 'returns current page number' do
+      expect(paginator.current_page).to eq 1
+    end
+  end
+
   describe '#all_records' do
     let(:current_page) { 2 }
     let(:total_pages) { 4 }
