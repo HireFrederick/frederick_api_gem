@@ -36,21 +36,6 @@ describe FrederickAPI::V2::Helpers::Paginator do
         expect(paginator.total_pages).to eq 1
       end
     end
-
-    context 'last link exists' do
-      let(:links) { { 'last' => '' } }
-      # let(:links) { OpenStruct.new('last' => '') }
-      let(:last_params) { { 'page.number' => '3' } }
-
-      before do
-        expect(links).to receive(:link_url_for).with('last').and_return 'foo'
-        expect(paginator).to receive(:params_for_uri).with('foo').and_return last_params
-      end
-
-      it 'returns something' do
-        expect(paginator.total_pages).to eq 3
-      end
-    end
   end
 
   describe '#per_page' do
