@@ -7,6 +7,7 @@ require 'active_support/concern'
 
 # FrederickAPI libs
 require 'frederick_api/configuration'
+require 'frederick_api/v2/errors/errors'
 require 'frederick_api/v2/helpers/has_many'
 require 'frederick_api/v2/helpers/paginator'
 require 'frederick_api/v2/helpers/query_builder'
@@ -20,8 +21,9 @@ require 'frederick_api/v2/location'
 # Public resources
 require 'frederick_api/v2/business_category'
 
-# Froldoex resources
+# Core resources
 require 'frederick_api/v2/automation'
+require 'frederick_api/v2/communication_content'
 require 'frederick_api/v2/contact'
 require 'frederick_api/v2/contact_property'
 require 'frederick_api/v2/contact_list'

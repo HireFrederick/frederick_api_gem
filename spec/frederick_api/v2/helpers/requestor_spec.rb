@@ -43,6 +43,106 @@ describe FrederickAPI::V2::Helpers::Requestor do
     end
   end
 
+  describe '#handle_errors' do
+    let(:has_errors) { false }
+
+    context 'with a ResultSet' do
+      let(:result) { instance_double(JsonApiClient::ResultSet) }
+
+      before { allow(result).to receive(:has_errors?).and_return has_errors }
+
+      context 'no errors' do
+        it 'returns result' do
+          expect(requestor.send(:handle_errors, result)).to be(result)
+        end
+      end
+
+      context 'has errors' do
+        let(:has_errors) { true }
+        let(:errors) { instance_double(JsonApiClient::ErrorCollector) }
+        let(:error) { instance_double(JsonApiClient::ErrorCollector::Error) }
+
+        before do
+          allow(result).to receive(:errors).and_return errors
+          allow(errors).to receive(:first).and_return error
+          allow(error).to receive(:[]).with(:status).and_return status
+        end
+
+        context 'error has a known status' do
+          let(:status) { '400' }
+
+          it 'raises correct error' do
+            expect { requestor.send(:handle_errors, result) }.to raise_error FrederickAPI::V2::Errors::BadRequest
+          end
+        end
+
+        context 'error has a unanticipated status' do
+          let(:status) { '483' }
+
+          it 'raises FrederickAPI::V2::Errors::Error' do
+            expect { requestor.send(:handle_errors, result) }.to raise_error FrederickAPI::V2::Errors::Error
+          end
+        end
+
+        context 'error has no status' do
+          let(:status) { nil }
+
+          it 'raises FrederickAPI::V2::Errors::Error' do
+            expect { requestor.send(:handle_errors, result) }.to raise_error FrederickAPI::V2::Errors::Error
+          end
+        end
+      end
+    end
+
+    context 'with a Resource' do
+      let(:result) { instance_double(FrederickAPI::V2::Resource) }
+
+      before { expect(result).to receive(:has_errors?).and_return has_errors }
+
+      context 'no errors' do
+        it 'returns result' do
+          expect(requestor.send(:handle_errors, result)).to be(result)
+        end
+      end
+
+      context 'has errors' do
+        let(:has_errors) { true }
+        let(:errors) { instance_double(JsonApiClient::ErrorCollector) }
+        let(:error) { instance_double(JsonApiClient::ErrorCollector::Error) }
+
+        before do
+          allow(result).to receive(:errors).and_return errors
+          allow(errors).to receive(:first).and_return error
+          allow(error).to receive(:[]).with(:status).and_return status
+        end
+
+        context 'error has a known status' do
+          let(:status) { '400' }
+
+          it 'raises correct error' do
+            expect { requestor.send(:handle_errors, result) }.to raise_error FrederickAPI::V2::Errors::BadRequest
+          end
+        end
+
+        context 'error has a unanticipated status' do
+          let(:status) { '483' }
+
+          it 'raises FrederickAPI::V2::Errors::Error' do
+            expect { requestor.send(:handle_errors, result) }.to raise_error FrederickAPI::V2::Errors::Error
+          end
+        end
+
+        context 'error has no status' do
+          let(:status) { nil }
+
+          it 'raises FrederickAPI::V2::Errors::Error' do
+            expect { requestor.send(:handle_errors, result) }.to raise_error FrederickAPI::V2::Errors::Error
+          end
+        end
+      end
+    end
+  end
+
   describe '#request' do
     let(:error) {}
     let(:type) { 'type' }
@@ -51,9 +151,10 @@ describe FrederickAPI::V2::Helpers::Requestor do
     let(:request_args) { [type, path, param] }
     let(:super_instance) { superklass.new(String) }
     let(:super_request_call_args) { [] }
-    let(:request_return) { 'request_return' }
+    let(:request_return) { instance_double(JsonApiClient::ResultSet) }
 
     before do
+      allow(request_return).to receive(:has_errors?).and_return false
       allow_any_instance_of(superklass).to receive(:request) do |*args|
         super_request_call_args << args[1..-1]
         raise(error) if super_request_call_args.length == 1 && error

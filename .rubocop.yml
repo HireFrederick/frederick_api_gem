@@ -45,12 +45,12 @@ Metrics/MethodLength:
 Metrics/LineLength:
   Max: 120
 
-Style/MultilineMethodCallIndentation:
+Layout/MultilineMethodCallIndentation:
   Exclude:
     - 'spec/**/*'
 
 # Checks the indentation of the first element in an array literal.
-Style/IndentArray:
+Layout/IndentArray:
   Enabled: false
 
 # Cop supports --auto-correct.
@@ -61,10 +61,10 @@ Style/SingleLineMethods:
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, SupportedStyles, IndentationWidth.
 # SupportedStyles: aligned, indented
-Style/MultilineOperationIndentation:
+Layout/MultilineOperationIndentation:
   EnforcedStyle: indented
 
-Style/IndentationConsistency:
+Layout/IndentationConsistency:
   # The difference between `rails` and `normal` is that the `rails` style
   # prescribes that in classes and modules the `protected` and `private`
   # modifier keywords shall be indented the same as public methods and that
@@ -86,7 +86,7 @@ Lint/UnusedMethodArgument:
   Exclude:
     - 'config/initializers/sidekiq.rb'
 
-Style/EmptyLinesAroundAccessModifier:
+Layout/EmptyLinesAroundAccessModifier:
   Enabled: false
 
 # Cop supports --auto-correct.

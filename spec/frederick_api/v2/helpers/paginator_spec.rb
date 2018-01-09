@@ -19,8 +19,45 @@ describe FrederickAPI::V2::Helpers::Paginator do
 
   describe 'class attrs' do
     it 'has right values set for class attrs' do
-      expect(described_class.page_param).to eq 'page.number'
-      expect(described_class.per_page_param).to eq 'page.size'
+      expect(described_class.page_param).to eq 'number'
+      expect(described_class.per_page_param).to eq 'size'
+    end
+  end
+
+  describe '#total_pages' do
+    let(:links) { {} }
+
+    before do
+      expect(paginator).to receive(:links).and_return links
+    end
+
+    context 'no last link' do
+      it 'current page' do
+        expect(paginator.total_pages).to eq 1
+      end
+    end
+  end
+
+  describe '#per_page' do
+    context 'no per page param' do
+      it 'returns length of result set' do
+        expect(paginator.per_page).to eq 2
+      end
+    end
+
+    context 'per page param exists' do
+      let(:params) { { 'page.size' => '5' } }
+
+      it 'returns per page param' do
+        expect(paginator).to receive(:params).and_return params
+        expect(paginator.per_page).to eq 5
+      end
+    end
+  end
+
+  describe '#current_page' do
+    it 'returns current page number' do
+      expect(paginator.current_page).to eq 1
     end
   end
 
