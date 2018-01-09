@@ -4,6 +4,7 @@ module FrederickAPI
   module V2
     # /v2/users
     class User < Resource
+      has_many :roles
     end
   end
 end
