@@ -29,6 +29,7 @@ require 'frederick_api/v2/contact_property'
 require 'frederick_api/v2/contact_list'
 require 'frederick_api/v2/contact_type'
 require 'frederick_api/v2/interaction'
+require 'frederick_api/v2/role'
 
 # Namespace for all Frederick API client methods/classes
 module FrederickAPI
