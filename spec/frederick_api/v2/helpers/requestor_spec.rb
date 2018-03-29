@@ -43,7 +43,170 @@ describe FrederickAPI::V2::Helpers::Requestor do
     end
   end
 
-  describe '#handle_errors' do
+  describe '#get' do
+    let(:path) { 'locations/foo/contact_types' }
+    let(:params) { { the: 'params', id: 'foo' } }
+    let(:response) { 'resp' }
+
+    before do
+      allow(requestor).to receive(:resource_path).and_return path
+      allow(requestor).to receive(:request).and_return response
+    end
+
+    it 'gets response' do
+      expect(requestor.get).to be response
+      expect(requestor).to have_received(:request).with(:get, path, {})
+    end
+
+    context 'with params' do
+      it 'gets response without primary key in params' do
+        expect(requestor.get(params)).to be response
+        expect(requestor).to have_received(:request).with(:get, path, params.except(:id))
+      end
+    end
+
+    context 'path matches GET_VIA_POST_PATHS' do
+      let(:headers) { { 'X-Request-Method' => 'GET' } }
+
+      %w[locations/foo/contacts locations/foo/interactions].each do |p|
+        context "path is #{p}" do
+          let(:path) { p }
+
+          it 'posts to get response without primary key in params' do
+            expect(requestor.get(params)).to be response
+            expect(requestor).to have_received(:request).with(:post, path, params.except(:id), headers)
+          end
+        end
+      end
+    end
+  end
+
+  describe '#linked' do
+    let(:url) { 'http://foo.com/locations/foo/contact_types?foo=bar&hey=yay' }
+    let(:response) { 'resp' }
+
+    before do
+      allow(requestor).to receive(:request).and_return response
+    end
+
+    it 'gets response' do
+      expect(requestor.linked(url)).to be response
+      expect(requestor).to have_received(:request).with(:get, url, {})
+    end
+
+    context 'url matches GET_VIA_POST_PATHS' do
+      let(:headers) { { 'X-Request-Method' => 'GET' } }
+
+      %w[http://foo.com/locations/foo/contacts http://foo.com/locations/foo/interactions].each do |p|
+        context "url is #{p}" do
+          let(:url) { p }
+          let(:path) do
+            u = URI.parse(p)
+            "#{u.scheme}://#{u.host}#{u.path}"
+          end
+          let(:expected_params) { {} }
+
+          it 'posts to get response without primary key in params' do
+            expect(requestor.linked(url)).to be response
+            expect(requestor).to have_received(:request).with(:post, path, expected_params, headers)
+          end
+        end
+
+        context "url is #{p} with params" do
+          let(:url) { "#{p}?foo=bar&hey=yay" }
+          let(:expected_params) { { 'foo' => 'bar', 'hey' => 'yay' } }
+          let(:path) do
+            u = URI.parse(p)
+            "#{u.scheme}://#{u.host}#{u.path}"
+          end
+
+          it 'posts to get response without primary key in params' do
+            expect(requestor.linked(url)).to be response
+            expect(requestor).to have_received(:request).with(:post, path, expected_params, headers)
+          end
+        end
+      end
+    end
+  end
+
+  describe '#request' do
+    let(:error) {}
+    let(:type) { 'type' }
+    let(:path) { 'path' }
+    let(:params) { 'param' }
+    let(:request_return) { instance_double(JsonApiClient::ResultSet, has_errors?: false) }
+    let(:request_headers) { resource.custom_headers }
+
+    context 'success' do
+      before { allow(requestor).to receive(:make_request).and_return request_return }
+
+      it 'makes request only once if there is no error' do
+        expect(requestor.send(:request, type, path, params)).to eq request_return
+        expect(requestor).to have_received(:make_request).with(type, path, params, request_headers)
+      end
+    end
+
+    context 'raising errors' do
+      before do
+        make_request_call_count = 0
+        allow(requestor).to receive(:make_request) do
+          if make_request_call_count == 1
+            request_return
+          else
+            make_request_call_count += 1
+            raise error
+          end
+        end
+      end
+
+      context 'JsonApiClient::Errors::ServerError' do
+        let(:error) { JsonApiClient::Errors::ServerError.new('foo') }
+
+        it 'makes request twice, is still successful' do
+          expect(requestor.send(:request, type, path, params)).to eq request_return
+          expect(requestor).to have_received(:make_request).with(type, path, params, request_headers).twice
+        end
+      end
+
+      context 'JsonApiClient::Errors::ConnectionError' do
+        let(:error) { JsonApiClient::Errors::ConnectionError.new('foo') }
+
+        it 'makes request twice, is still successful' do
+          expect(requestor.send(:request, type, path, params)).to eq request_return
+          expect(requestor).to have_received(:make_request).with(type, path, params, request_headers).twice
+        end
+      end
+
+      context 'JsonApiClient::Errors::NotFound' do
+        let(:error) { JsonApiClient::Errors::NotFound.new('foo') }
+
+        it 'makes request only once, and does not rescue error' do
+          expect { requestor.send(:request, type, path, params) }.to raise_error error
+          expect(requestor).to have_received(:make_request).with(type, path, params, request_headers).once
+        end
+      end
+
+      context 'JsonApiClient::Errors::Conflict' do
+        let(:error) { JsonApiClient::Errors::Conflict.new('foo') }
+
+        it 'makes request only once, and does not rescue error' do
+          expect { requestor.send(:request, type, path, params) }.to raise_error error
+          expect(requestor).to have_received(:make_request).with(type, path, params, request_headers).once
+        end
+      end
+
+      context 'other error raised' do
+        let(:error) { StandardError.new('foo') }
+
+        it 'calls request only once, and does not rescue error' do
+          expect { requestor.send(:request, type, path, params) }.to raise_error error
+          expect(requestor).to have_received(:make_request).with(type, path, params, request_headers).once
+        end
+      end
+    end
+  end
+
+  describe '-handle_errors' do
     let(:has_errors) { false }
 
     context 'with a ResultSet' do
@@ -143,73 +306,22 @@ describe FrederickAPI::V2::Helpers::Requestor do
     end
   end
 
-  describe '#request' do
-    let(:error) {}
+  describe '-make_request' do
+    let(:response) { 'resp' }
+    let(:expected_result) { 'expected' }
     let(:type) { 'type' }
     let(:path) { 'path' }
-    let(:param) { 'param' }
-    let(:request_args) { [type, path, param] }
-    let(:super_instance) { superklass.new(String) }
-    let(:super_request_call_args) { [] }
-    let(:request_return) { instance_double(JsonApiClient::ResultSet) }
+    let(:params) { 'params' }
+    let(:headers) { 'headers' }
 
     before do
-      allow(request_return).to receive(:has_errors?).and_return false
-      allow_any_instance_of(superklass).to receive(:request) do |*args|
-        super_request_call_args << args[1..-1]
-        raise(error) if super_request_call_args.length == 1 && error
-        request_return
-      end
+      allow(resource.parser).to receive(:parse).with(resource, response).and_return expected_result
+      allow(requestor.connection).to receive(:run).and_return response
     end
 
-    it 'calls request only once if there is no error' do
-      expect(requestor.send(:request, *request_args)).to eq request_return
-      expect(super_request_call_args).to eq [request_args]
-    end
-
-    context 'JsonApiClient::Errors::ServerError' do
-      let(:error) { JsonApiClient::Errors::ServerError.new('foo') }
-
-      it 'calls request twice' do
-        expect(requestor.send(:request, *request_args)).to eq request_return
-        expect(super_request_call_args).to eq [request_args, request_args]
-      end
-    end
-
-    context 'JsonApiClient::Errors::ConnectionError' do
-      let(:error) { JsonApiClient::Errors::ConnectionError.new('foo') }
-
-      it 'calls request twice' do
-        expect(requestor.send(:request, *request_args)).to eq request_return
-        expect(super_request_call_args).to eq [request_args, request_args]
-      end
-    end
-
-    context 'JsonApiClient::Errors::NotFound' do
-      let(:error) { JsonApiClient::Errors::NotFound.new('foo') }
-
-      it 'calls request only once, and does not rescue error' do
-        expect { requestor.send(:request, *request_args) }.to raise_error error
-        expect(super_request_call_args).to eq [request_args]
-      end
-    end
-
-    context 'JsonApiClient::Errors::Conflict' do
-      let(:error) { JsonApiClient::Errors::Conflict.new('foo') }
-
-      it 'calls request only once, and does not rescue error' do
-        expect { requestor.send(:request, *request_args) }.to raise_error error
-        expect(super_request_call_args).to eq [request_args]
-      end
-    end
-
-    context 'other error raised' do
-      let(:error) { StandardError.new('foo') }
-
-      it 'calls request only once, and does not rescue error' do
-        expect { requestor.send(:request, *request_args) }.to raise_error error
-        expect(super_request_call_args).to eq [request_args]
-      end
+    it 'returns expected' do
+      expect(requestor.send(:make_request, type, path, params, headers)).to be expected_result
+      expect(requestor.connection).to have_received(:run).with(type, path, params, headers)
     end
   end
 end

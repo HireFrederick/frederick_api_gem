@@ -7,6 +7,13 @@ module FrederickAPI
       class Requestor < JsonApiClient::Query::Requestor
         attr_reader :path
 
+        # Paths that may have an unbounded query param length so we should always use a POST
+        # instead of a GET to get around AWS Cloudfront limitations
+        GET_VIA_POST_PATHS = [
+          %r{^.*locations\/[^\/]+\/contacts$},
+          %r{^.*locations\/[^\/]+\/interactions$}
+        ].map(&:freeze).freeze
+
         def initialize(klass, path = nil)
           @klass = klass
           @path = path
@@ -21,12 +28,33 @@ module FrederickAPI
           end
         end
 
+        def get(params = {})
+          path = resource_path(params)
+
+          params.delete(klass.primary_key)
+          return request(:post, path, params, 'X-Request-Method' => 'GET') if get_via_post_path?(path)
+
+          request(:get, path, params)
+        end
+
+        def linked(path)
+          uri = URI.parse(path)
+          return super unless get_via_post_path?(uri.path)
+
+          path_without_params = "#{uri.scheme}://#{uri.host}#{uri.path}"
+          params = uri.query ? CGI.parse(uri.query).each_with_object({}) { |(k, v), h| h[k] = v[0] } : {}
+          request(:post, path_without_params, params, 'X-Request-Method' => 'GET')
+        end
+
         # Retry once on unhandled server errors
-        def request(type, path, params)
-          handle_errors(super)
-        rescue JsonApiClient::Errors::ConnectionError, JsonApiClient::Errors::ServerError => ex
-          raise ex if ex.is_a?(JsonApiClient::Errors::NotFound) || ex.is_a?(JsonApiClient::Errors::Conflict)
-          handle_errors(super)
+        def request(type, path, params, additional_headers = {})
+          headers = klass.custom_headers.merge(additional_headers)
+          begin
+            handle_errors(make_request(type, path, params, headers))
+          rescue JsonApiClient::Errors::ConnectionError, JsonApiClient::Errors::ServerError => ex
+            raise ex if ex.is_a?(JsonApiClient::Errors::NotFound) || ex.is_a?(JsonApiClient::Errors::Conflict)
+            handle_errors(make_request(type, path, params, headers))
+          end
         end
 
         private
@@ -36,6 +64,14 @@ module FrederickAPI
             error_klass = FrederickAPI::V2::Errors::ERROR_CODES[result.errors.first[:status]] ||
               FrederickAPI::V2::Errors::Error
             raise error_klass, result
+          end
+
+          def make_request(type, path, params, headers)
+            klass.parser.parse(klass, connection.run(type, path, params, headers))
+          end
+
+          def get_via_post_path?(path)
+            GET_VIA_POST_PATHS.any? { |r| r.match(path) }
           end
       end
     end
