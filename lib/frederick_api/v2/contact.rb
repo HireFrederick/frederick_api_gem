@@ -3,7 +3,7 @@
 module FrederickAPI
   module V2
     # /v2/locations/:location_id/contacts
-    class Contact < Resource
+    class Contact < ::FrederickAPI::V2::BackgroundableResource
       belongs_to :location
       has_one :contact_type
       has_one :parent, class_name: 'FrederickAPI::V2::Contact'
@@ -14,6 +14,8 @@ module FrederickAPI
       has_many :interactions
 
       self.read_only_attributes += [:location_id]
+
+
     end
   end
 end
