@@ -138,7 +138,10 @@ describe FrederickAPI::V2::Helpers::Requestor do
     let(:request_headers) { resource.custom_headers }
 
     context 'success' do
-      before { allow(requestor).to receive(:make_request).and_return request_return }
+      before do
+        allow(request_return).to receive(:first).and_return(instance_double(FrederickAPI::V2::Contact))
+        allow(requestor).to receive(:make_request).and_return request_return
+      end
 
       it 'makes request only once if there is no error' do
         expect(requestor.send(:request, type, path, params)).to eq request_return
@@ -307,7 +310,7 @@ describe FrederickAPI::V2::Helpers::Requestor do
   end
 
   describe '-make_request' do
-    let(:response) { 'resp' }
+    let(:response) { instance_double(Faraday::Response, status: 200) }
     let(:expected_result) { 'expected' }
     let(:type) { 'type' }
     let(:path) { 'path' }
