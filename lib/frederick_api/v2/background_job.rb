@@ -9,6 +9,10 @@ module FrederickAPI
       attr_accessor :meta
       belongs_to :contact
 
+      def has_errors?
+        @attributes['status'] == 'error'
+      end
+
       def retry_after
         try_time = @meta[:headers]['retry-after'].to_i
         @retry_after ||= try_time > 1 ? try_time : 1
@@ -22,8 +26,8 @@ module FrederickAPI
         @attributes['status']
       end
 
-      def messages
-        @attributes['messages']
+      def errors
+        @attributes['errors']
       end
 
       def id

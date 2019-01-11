@@ -62,6 +62,7 @@ module FrederickAPI
         private
           def handle_background(response)
             return response unless (job = response&.first).is_a? ::FrederickAPI::V2::BackgroundJob
+            raise FrederickAPI::V2::Errors::BackgroundJobFailure.new(job) if job.has_errors?
             sleep job.retry_after
             linked(job.links.attributes['self'])
           end

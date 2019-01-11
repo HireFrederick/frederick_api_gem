@@ -304,6 +304,19 @@ describe FrederickAPI::V2::Resource, :integration do
           }
         }
       end
+      let(:error_attributes) do
+        {
+            'data': {
+                'attributes': {
+                    'status': 'error',
+                    'errors': [
+                      'the fooborg graggled to the end, but found no nugbesters',
+                      'a vorpal sword must be equipped in order to perform this action'
+                    ]
+                }
+            }
+        }
+      end
       let(:background_resource_base_response_body) do
         {
           'data': {
@@ -335,6 +348,17 @@ describe FrederickAPI::V2::Resource, :integration do
             'Retry-After': 42
           },
           body: background_resource_base_response_body.deep_merge(processing_attributes).to_json
+        }
+      end
+
+      let(:background_resource_error_response) do
+        {
+            status: 202,
+            headers: {
+                'Content-Type': 'application/vnd.api+json',
+                'Content-Location': background_resource_url
+            },
+            body: background_resource_base_response_body.deep_merge(error_attributes).to_json
         }
       end
 
@@ -391,6 +415,17 @@ describe FrederickAPI::V2::Resource, :integration do
         it 'returns completed resource' do
           expect(resource.where(location_id: location_id).all.first.attributes['foo'])
               .to eq('bar')
+        end
+      end
+      context "when errors happen" do
+        before do
+          stub_request(:post, long_job_url)
+              .to_return(background_resource_error_response)
+        end
+        it "raises a BackgroundJobFailure exception" do
+          expect {
+            resource.where(location_id: location_id).all
+          }.to raise_error(FrederickAPI::V2::Errors::BackgroundJobFailure)
         end
       end
     end

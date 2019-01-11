@@ -22,6 +22,12 @@ module FrederickAPI
 
       class BadRequest < Error; end
       class UnprocessableEntity < Error; end
+      class BackgroundJobFailure < Error
+        def initialize(job)
+          @job = job
+          super(job)
+        end
+      end
 
       ERROR_CODES = {
         '400' => BadRequest,
