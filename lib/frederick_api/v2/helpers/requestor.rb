@@ -33,9 +33,9 @@ module FrederickAPI
 
           params.delete(klass.primary_key)
           if get_via_post_path?(path)
-             request(:post, path, params, 'X-Request-Method' => 'GET')
+            request(:post, path, params, 'X-Request-Method' => 'GET')
           else
-             request(:get, path, params)
+            request(:get, path, params)
           end
         end
 
@@ -61,7 +61,7 @@ module FrederickAPI
 
         private
           def handle_background(response)
-            return response unless (job = response&.first).kind_of? ::FrederickAPI::V2::BackgroundJob
+            return response unless (job = response&.first).is_a? ::FrederickAPI::V2::BackgroundJob
             sleep job.retry_after
             linked(job.links.attributes['self'])
           end

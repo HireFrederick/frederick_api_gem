@@ -14,8 +14,6 @@ module FrederickAPI
       has_many :interactions
 
       self.read_only_attributes += [:location_id]
-
-
     end
   end
 end
