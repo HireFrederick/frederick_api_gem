@@ -5,7 +5,7 @@ module FrederickAPI
     # V2 Frederick API async background job class for parsing
     # background job responses coming from API.
     class BackgroundJob < Resource
-      attr_accessor :meta
+      attr_accessor :response
       belongs_to :contact
 
       def has_errors?
@@ -13,12 +13,12 @@ module FrederickAPI
       end
 
       def retry_after
-        try_time = @meta[:headers]['retry-after'].to_i
+        try_time = @response[:headers]['retry-after'].to_i
         @retry_after ||= try_time > 1 ? try_time : 1
       end
 
       def response_code
-        @response_code ||= @meta[:status]
+        @response_code ||= @response[:status]
       end
 
       def status

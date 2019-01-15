@@ -9,7 +9,7 @@ module FrederickAPI
           result_set = super(klass, response)
           return result_set unless result_set&.first&.type == 'background_jobs'
           result_set = super(::FrederickAPI::V2::BackgroundJob, response)
-          result_set&.first&.meta = { headers: response.headers, status: response.status }
+          result_set&.first&.response = { headers: response.headers, status: response.status }
           result_set
         end
       end
