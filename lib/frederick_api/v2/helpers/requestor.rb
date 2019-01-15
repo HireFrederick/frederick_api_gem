@@ -32,11 +32,8 @@ module FrederickAPI
           path = resource_path(params)
 
           params.delete(klass.primary_key)
-          if get_via_post_path?(path)
-            request(:post, path, params, 'X-Request-Method' => 'GET')
-          else
-            request(:get, path, params)
-          end
+          return request(:post, path, params, 'X-Request-Method' => 'GET') if get_via_post_path?(path)
+          request(:get, path, params)
         end
 
         def linked(path)
