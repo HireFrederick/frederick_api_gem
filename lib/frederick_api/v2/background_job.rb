@@ -6,7 +6,6 @@ module FrederickAPI
     # background job responses coming from API.
     class BackgroundJob < Resource
       attr_accessor :response
-      belongs_to :contact
 
       def has_errors?
         @attributes['status'] == 'error'

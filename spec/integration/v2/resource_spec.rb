@@ -304,6 +304,15 @@ describe FrederickAPI::V2::Resource, :integration do
           }
         }
       end
+      let(:complete_attributes) do
+        {
+          'data': {
+            'attributes': {
+              'status': 'complete'
+            }
+          }
+        }
+      end
       let(:error_attributes) do
         {
           'data': {
@@ -359,6 +368,17 @@ describe FrederickAPI::V2::Resource, :integration do
             'Content-Location': background_resource_url
           },
           body: background_resource_base_response_body.deep_merge(error_attributes).to_json
+        }
+      end
+
+      let(:background_resource_complete_response) do
+        {
+          status: 202,
+          headers: {
+            'Content-Type': 'application/vnd.api+json',
+            'Content-Location': background_resource_url
+          },
+          body: background_resource_base_response_body.deep_merge(complete_attributes).to_json
         }
       end
 
@@ -426,6 +446,16 @@ describe FrederickAPI::V2::Resource, :integration do
           expect do
             resource.where(location_id: location_id).all
           end.to raise_error(FrederickAPI::V2::Errors::BackgroundJobFailure)
+        end
+      end
+      context 'when complete, with no response' do
+        before do
+          stub_request(:post, long_job_url)
+            .to_return(background_resource_complete_response)
+        end
+        it 'returns the BackgoundJob resource' do
+          expect(resource.where(location_id: location_id).all.first)
+              .to be_kind_of(FrederickAPI::V2::BackgroundJob)
         end
       end
     end
