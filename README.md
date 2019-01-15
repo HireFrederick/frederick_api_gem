@@ -101,3 +101,14 @@ FrederickAPI::V2::Location.with_access_token(access_token) do
   # => [...]
 end
 ```
+### Background Jobs
+
+FrederickAPI Gem handles asynchronous responses as suggested in 
+[JSONApi Recommendations](https://jsonapi.org/recommendations/#asynchronous-processing) 
+[Asynchronous Processing](https://jsonapi.org/recommendations/#asynchronous-processing).
+Polling until the job is complete, fetching and returning the completed resource.
+
+* A FrederickAPI::V2::Errors::BackgroundJobFailure exception is raised if the API returns 
+an error on an asyncronous job.
+* A BackgroundJob Resource will be returned from the client in the case that a successful 
+ job does not return a resources.  
