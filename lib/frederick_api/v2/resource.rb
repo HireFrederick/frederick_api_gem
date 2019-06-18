@@ -10,6 +10,7 @@ module FrederickAPI
       self.query_builder = FrederickAPI::V2::Helpers::QueryBuilder
       self.paginator = FrederickAPI::V2::Helpers::Paginator
       self.requestor_class = FrederickAPI::V2::Helpers::Requestor
+      self.parser = ::FrederickAPI::V2::Helpers::BackgroundableParser
 
       attr_accessor :custom_headers
 

@@ -14,7 +14,6 @@ require 'frederick_api/v2/helpers/query_builder'
 require 'frederick_api/v2/helpers/requestor'
 require 'frederick_api/v2/helpers/backgroundable_parser'
 require 'frederick_api/v2/resource'
-require 'frederick_api/v2/backgroundable_resource'
 require 'frederick_api/v2/public_resource'
 
 require 'frederick_api/v2/user'

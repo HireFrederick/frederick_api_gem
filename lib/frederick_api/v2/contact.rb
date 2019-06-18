@@ -3,7 +3,7 @@
 module FrederickAPI
   module V2
     # /v2/locations/:location_id/contacts
-    class Contact < ::FrederickAPI::V2::BackgroundableResource
+    class Contact < Resource
       belongs_to :location
       has_one :contact_type
       has_one :parent, class_name: 'FrederickAPI::V2::Contact'
