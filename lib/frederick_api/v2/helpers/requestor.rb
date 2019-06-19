@@ -48,11 +48,12 @@ module FrederickAPI
         # Retry once on unhandled server errors
         def request(type, path, params, additional_headers = {})
           headers = klass.custom_headers.merge(additional_headers)
+          make_request = proc { handle_background(handle_errors(make_request(type, path, params, headers))) }
           begin
-            handle_background(handle_errors(make_request(type, path, params, headers)))
+            make_request.call
           rescue JsonApiClient::Errors::ConnectionError, JsonApiClient::Errors::ServerError => ex
             raise ex if ex.is_a?(JsonApiClient::Errors::NotFound) || ex.is_a?(JsonApiClient::Errors::Conflict)
-            handle_errors(make_request(type, path, params, headers))
+            make_request.call
           end
         end
 

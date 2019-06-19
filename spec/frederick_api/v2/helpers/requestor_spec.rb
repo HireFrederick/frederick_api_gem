@@ -137,9 +137,10 @@ describe FrederickAPI::V2::Helpers::Requestor do
     let(:request_return) { instance_double(JsonApiClient::ResultSet, has_errors?: false) }
     let(:request_headers) { resource.custom_headers }
 
+    before { allow(request_return).to receive(:first).and_return(instance_double(FrederickAPI::V2::Contact)) }
+
     context 'success' do
       before do
-        allow(request_return).to receive(:first).and_return(instance_double(FrederickAPI::V2::Contact))
         allow(requestor).to receive(:make_request).and_return request_return
       end
 
