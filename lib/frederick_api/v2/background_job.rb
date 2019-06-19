@@ -25,7 +25,7 @@ module FrederickAPI
       end
 
       def errors
-        @attributes['errors']
+        @attributes['messages']
       end
 
       def id

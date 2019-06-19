@@ -25,12 +25,7 @@ module FrederickAPI
 
       # an exception class for when the server reports that a
       # long running job has failed.
-      class BackgroundJobFailure < Error
-        def initialize(job)
-          @job = job
-          super(job)
-        end
-      end
+      class BackgroundJobFailure < Error; end
 
       ERROR_CODES = {
         '400' => BadRequest,
