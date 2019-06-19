@@ -33,7 +33,6 @@ module FrederickAPI
 
           params.delete(klass.primary_key)
           return request(:post, path, params, 'X-Request-Method' => 'GET') if get_via_post_path?(path)
-
           request(:get, path, params)
         end
 
@@ -49,15 +48,23 @@ module FrederickAPI
         # Retry once on unhandled server errors
         def request(type, path, params, additional_headers = {})
           headers = klass.custom_headers.merge(additional_headers)
+          make_request = proc { handle_background(handle_errors(make_request(type, path, params, headers))) }
           begin
-            handle_errors(make_request(type, path, params, headers))
+            make_request.call
           rescue JsonApiClient::Errors::ConnectionError, JsonApiClient::Errors::ServerError => ex
             raise ex if ex.is_a?(JsonApiClient::Errors::NotFound) || ex.is_a?(JsonApiClient::Errors::Conflict)
-            handle_errors(make_request(type, path, params, headers))
+            make_request.call
           end
         end
 
         private
+          def handle_background(response)
+            return response unless
+                (job = response&.first).is_a?(::FrederickAPI::V2::BackgroundJob) && job.status != 'complete'
+            raise FrederickAPI::V2::Errors::BackgroundJobFailure, job if job.has_errors?
+            sleep job.retry_after
+            linked(job.links.attributes['self'])
+          end
 
           def handle_errors(result)
             return result unless result.has_errors?
@@ -67,7 +74,9 @@ module FrederickAPI
           end
 
           def make_request(type, path, params, headers)
-            klass.parser.parse(klass, connection.run(type, path, params, headers))
+            faraday_response = connection.run(type, path, params, headers)
+            return klass.parser.parse(klass, faraday_response) unless faraday_response.status == 303
+            linked(faraday_response.headers['location'])
           end
 
           def get_via_post_path?(path)

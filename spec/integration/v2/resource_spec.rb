@@ -269,6 +269,196 @@ describe FrederickAPI::V2::Resource, :integration do
         end.to raise_error FrederickAPI::V2::Errors::UnprocessableEntity
       end
     end
+
+    context 'long running processes' do
+      let(:base_url) { 'http://test.host/v2' }
+      let(:resource) { FrederickAPI::V2::Contact }
+      let(:request_headers) do
+        {
+          'Accept': 'application/vnd.api+json',
+          'Content-Type': 'application/vnd.api+json'
+        }
+      end
+      let(:location_id) { SecureRandom.uuid }
+      let(:long_resource) { FrederickAPI::V2::Contact }
+      let(:long_job_url) { "#{base_url}/locations/#{location_id}/contacts" }
+      let(:background_base_url) { "#{base_url}/locations/#{location_id}/contacts/background_jobs" }
+      let(:background_id) { SecureRandom.uuid }
+      let(:background_resource_path) { "/v2/locations/#{location_id}/contacts/background_jobs/#{background_id}" }
+      let(:background_resource_url) { "#{background_base_url}/#{background_id}" }
+      let(:queued_attributes) do
+        {
+          'data': {
+            'attributes': {
+              'status': 'queued'
+            }
+          }
+        }
+      end
+      let(:processing_attributes) do
+        {
+          'data': {
+            'attributes': {
+              'status': 'processing'
+            }
+          }
+        }
+      end
+      let(:complete_attributes) do
+        {
+          'data': {
+            'attributes': {
+              'status': 'complete'
+            }
+          }
+        }
+      end
+      let(:error_attributes) do
+        {
+          'data': {
+            'attributes': {
+              'status': 'error',
+              'errors': [
+                    'the fooborg graggled to the end, but found no nugbesters',
+                    'a vorpal sword must be equipped in order to perform this action'
+                  ]
+            }
+          }
+        }
+      end
+      let(:background_resource_base_response_body) do
+        {
+          'data': {
+            'type': 'background_jobs',
+            'id': background_id,
+            'links': {
+              'self': background_resource_path
+            }
+          }
+        }
+      end
+
+      let(:background_resource_202_response) do
+        {
+          status: 202,
+          headers: {
+            'Content-Type': 'application/vnd.api+json',
+            'Content-Location': background_resource_url
+          },
+          body: background_resource_base_response_body.deep_merge(queued_attributes).to_json
+        }
+      end
+
+      let(:background_resource) do
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/vnd.api+json',
+            'Retry-After': 42
+          },
+          body: background_resource_base_response_body.deep_merge(processing_attributes).to_json
+        }
+      end
+
+      let(:background_resource_error_response) do
+        {
+          status: 202,
+          headers: {
+            'Content-Type': 'application/vnd.api+json',
+            'Content-Location': background_resource_url
+          },
+          body: background_resource_base_response_body.deep_merge(error_attributes).to_json
+        }
+      end
+
+      let(:background_resource_complete_response) do
+        {
+          status: 202,
+          headers: {
+            'Content-Type': 'application/vnd.api+json',
+            'Content-Location': background_resource_url
+          },
+          body: background_resource_base_response_body.deep_merge(complete_attributes).to_json
+        }
+      end
+
+      let(:real_payload_url) { "#{long_job_url}/background_jobs/#{background_id}/real_payload" }
+      let(:redirect_to_real_payload) { { status: 303, headers: { 'Location': real_payload_url } } }
+      let(:real_payload) do
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/vnd.api+json'
+          },
+          body: {
+            data: {
+              type: 'contacts',
+              attributes: {
+                foo: 'bar'
+              }
+            }
+          }.to_json
+        }
+      end
+
+      context 'when successful' do
+        before do
+          stub_request(:post, long_job_url)
+              .to_return(background_resource_202_response)
+          stub_request(:get, background_resource_url)
+              .to_return(background_resource).then
+              .to_return(background_resource).then
+              .to_return(redirect_to_real_payload)
+          stub_request(:get, real_payload_url).to_return(real_payload)
+          allow_any_instance_of(FrederickAPI::V2::Helpers::Requestor).to receive(:sleep).with(1)
+          allow_any_instance_of(FrederickAPI::V2::Helpers::Requestor).to receive(:sleep).with(42)
+        end
+
+        it 'follows 202 Location' do
+          expect(resource.where(location_id: location_id).all)
+              .to have_requested(:get, background_resource_url).at_least_times(1)
+        end
+
+        it 'polls for completion' do
+          expect(resource.where(location_id: location_id).all)
+            .to have_requested(:get, background_resource_url)
+            .at_least_times(2)
+        end
+        it 'respects the retry-after header' do
+          expect_any_instance_of(FrederickAPI::V2::Helpers::Requestor).to receive(:sleep).exactly(3).times
+          resource.where(location_id: location_id).all
+        end
+        it 'follows 303' do
+          expect(resource.where(location_id: location_id).all)
+              .to have_requested(:get, real_payload_url)
+        end
+        it 'returns completed resource' do
+          expect(resource.where(location_id: location_id).all.first.attributes['foo'])
+              .to eq('bar')
+        end
+      end
+      context 'when errors happen' do
+        before do
+          stub_request(:post, long_job_url)
+              .to_return(background_resource_error_response)
+        end
+        it 'raises a BackgroundJobFailure exception' do
+          expect do
+            resource.where(location_id: location_id).all
+          end.to raise_error(FrederickAPI::V2::Errors::BackgroundJobFailure)
+        end
+      end
+      context 'when complete, with no response' do
+        before do
+          stub_request(:post, long_job_url)
+            .to_return(background_resource_complete_response)
+        end
+        it 'returns the BackgoundJob resource' do
+          expect(resource.where(location_id: location_id).all.first)
+              .to be_kind_of(FrederickAPI::V2::BackgroundJob)
+        end
+      end
+    end
   end
 
   describe 'PATCH' do
