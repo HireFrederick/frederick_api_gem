@@ -32,8 +32,11 @@ module FrederickAPI
           path = resource_path(params)
 
           params.delete(klass.primary_key)
-          return request(:post, path, params, 'X-Request-Method' => 'GET') if get_via_post_path?(path)
-          request(:get, path, params)
+          if get_via_post_path?(path)
+            return request(:post, path, body: params.to_json, additional_headers: { 'X-Request-Method' => 'GET' })
+          end
+
+          request(:get, path, params: params)
         end
 
         def linked(path)
@@ -42,13 +45,16 @@ module FrederickAPI
 
           path_without_params = "#{uri.scheme}://#{uri.host}#{uri.path}"
           params = uri.query ? CGI.parse(uri.query).each_with_object({}) { |(k, v), h| h[k] = v[0] } : {}
-          request(:post, path_without_params, params, 'X-Request-Method' => 'GET')
+          request(:post, path_without_params, params: params, additional_headers: { 'X-Request-Method' => 'GET' })
         end
 
         # Retry once on unhandled server errors
-        def request(type, path, params, additional_headers = {})
+        def request(type, path, params: nil, body: nil, additional_headers: {})
           headers = klass.custom_headers.merge(additional_headers)
-          make_request = proc { handle_background(handle_errors(make_request(type, path, params, headers))) }
+          make_request = proc do
+            handle_background(handle_errors(make_request(type, path, params: params, body: body, headers: headers)))
+          end
+
           begin
             make_request.call
           rescue JsonApiClient::Errors::ConnectionError, JsonApiClient::Errors::ServerError => ex
@@ -73,10 +79,12 @@ module FrederickAPI
             raise error_klass, result
           end
 
-          def make_request(type, path, params, headers)
-            faraday_response = connection.run(type, path, params, headers)
+          def make_request(type, path, params:, body:, headers:)
+            faraday_response = connection.run(type, path, params: params, body: body, headers: headers)
             return klass.parser.parse(klass, faraday_response) unless faraday_response.status == 303
             linked(faraday_response.headers['location'])
+          rescue JsonApiClient::Errors::ClientError => ex
+            klass.parser.parse(klass, ex.env.response)
           end
 
           def get_via_post_path?(path)

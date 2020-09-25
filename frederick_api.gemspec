@@ -17,5 +17,5 @@ Gem::Specification.new do |spec|
   spec.licenses      = ['MIT']
   spec.files         = Dir['{lib}/**/*', 'README.md', 'MIT-LICENSE']
   spec.require_paths = ['lib']
-  spec.add_runtime_dependency 'json_api_client', '~> 1.5.3'
+  spec.add_runtime_dependency 'json_api_client', '~> 1.17.1'
 end
