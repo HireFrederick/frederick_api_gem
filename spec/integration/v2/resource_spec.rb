@@ -270,6 +270,36 @@ describe FrederickAPI::V2::Resource, :integration do
       end
     end
 
+    context 'errors which should raise JsonApiClient::Errors::Error classes' do
+      {
+        401 => JsonApiClient::Errors::NotAuthorized,
+        403 => JsonApiClient::Errors::AccessDenied,
+        404 => JsonApiClient::Errors::NotFound,
+        409 => JsonApiClient::Errors::Conflict,
+        500 => JsonApiClient::Errors::ServerError,
+        42 => JsonApiClient::Errors::UnexpectedStatus
+      }.each do |response_code, error_klass|
+        context "response is #{response_code}" do
+          let(:resp) do
+            {
+              status: response_code
+            }
+          end
+
+          before do
+            stub_request(:get, base_url)
+              .with(headers: request_headers).to_return(resp)
+          end
+
+          it 'raises' do
+            expect do
+              resource.with_access_token(access_token) { resource.all }.first
+            end.to raise_error error_klass
+          end
+        end
+      end
+    end
+
     context 'long running processes' do
       let(:base_url) { 'http://test.host/v2' }
       let(:resource) { FrederickAPI::V2::Contact }

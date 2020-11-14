@@ -7,6 +7,17 @@ module FrederickAPI
       class Requestor < JsonApiClient::Query::Requestor
         attr_reader :path
 
+        # For backward compatibility, preserve these JSON API client errors instead of raising
+        # FrederickAPI::Errors::Error
+        JSON_API_CLIENT_PASSTHROUGH_ERRORS = [
+          JsonApiClient::Errors::NotAuthorized,
+          JsonApiClient::Errors::AccessDenied,
+          JsonApiClient::Errors::NotFound,
+          JsonApiClient::Errors::Conflict,
+          JsonApiClient::Errors::ServerError,
+          JsonApiClient::Errors::UnexpectedStatus
+        ].freeze
+
         # Paths that may have an unbounded query param length so we should always use a POST
         # instead of a GET to get around AWS Cloudfront limitations
         GET_VIA_POST_PATHS = [
@@ -82,13 +93,20 @@ module FrederickAPI
           def make_request(type, path, params:, body:, headers:)
             faraday_response = connection.run(type, path, params: params, body: body, headers: headers)
             return klass.parser.parse(klass, faraday_response) unless faraday_response.status == 303
+
             linked(faraday_response.headers['location'])
-          rescue JsonApiClient::Errors::ClientError => ex
-            klass.parser.parse(klass, ex.env.response)
+          rescue JsonApiClient::Errors::ClientError => e
+            handle_json_api_client_error(e)
           end
 
           def get_via_post_path?(path)
             GET_VIA_POST_PATHS.any? { |r| r.match(path) }
+          end
+
+          def handle_json_api_client_error(error)
+            raise error if JSON_API_CLIENT_PASSTHROUGH_ERRORS.include?(error.class)
+
+            klass.parser.parse(klass, error.env.response)
           end
       end
     end
