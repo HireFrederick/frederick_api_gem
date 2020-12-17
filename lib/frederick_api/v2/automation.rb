@@ -5,6 +5,8 @@ module FrederickAPI
     # /v2/locations/:location_id/automations
     class Automation < Resource
       belongs_to :location
+      has_many :automation_steps
+
       self.read_only_attributes += [:location_id]
     end
   end

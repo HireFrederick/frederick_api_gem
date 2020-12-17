@@ -5,9 +5,9 @@ module FrederickAPI
     # Resource for automation step
     class AutomationStep < Resource
       belongs_to :location
-      belongs_to :automation
+      has_one :automation
 
-      self.read_only_attributes += %i[location_id automation_id]
+      self.read_only_attributes += %i[location_id]
     end
   end
 end
