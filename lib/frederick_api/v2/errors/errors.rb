@@ -23,6 +23,10 @@ module FrederickAPI
       class BadRequest < Error; end
       class UnprocessableEntity < Error; end
 
+      # an exception class for when the server reports that a
+      # long running job has failed.
+      class BackgroundJobFailure < Error; end
+
       ERROR_CODES = {
         '400' => BadRequest,
         '422' => UnprocessableEntity

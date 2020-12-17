@@ -20,7 +20,7 @@ module FrederickAPI
           def query_builder(url)
             association_class.query_builder.new(
               association_class,
-              association_class.requestor_class.new(association_class, url)
+              requestor: association_class.requestor_class.new(association_class, url)
             )
           end
 

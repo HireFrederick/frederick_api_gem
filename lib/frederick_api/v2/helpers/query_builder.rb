@@ -9,9 +9,9 @@ module FrederickAPI
       class QueryBuilder < JsonApiClient::Query::Builder
         attr_reader :requestor
 
-        def initialize(klass, requestor = nil)
-          super(klass)
-          @requestor = requestor || klass.requestor
+        def initialize(klass, opts = {})
+          super(klass, opts)
+          @requestor = opts[:requestor] || klass.requestor
         end
 
         def params
@@ -21,17 +21,6 @@ module FrederickAPI
             .merge(primary_key_params)
             .merge(path_params)
             .merge(additional_params)
-        end
-
-        def find(args = {})
-          case args
-          when Hash
-            where(args)
-          else
-            @primary_key = args
-          end
-
-          requestor.get(params)
         end
 
         def filter_params
@@ -65,6 +54,27 @@ module FrederickAPI
             { prefix => object }
           end
         end
+
+        protected
+
+          def _fetch
+            (requestor || klass.requestor).get(params)
+          end
+
+        private
+
+          def _new_scope(opts = {})
+            self.class.new(@klass,
+                           requestor:         requestor,
+                           primary_key:       opts.fetch(:primary_key, @primary_key),
+                           pagination_params: @pagination_params.merge(opts.fetch(:pagination_params, {})),
+                           path_params:       @path_params.merge(opts.fetch(:path_params, {})),
+                           additional_params: @additional_params.merge(opts.fetch(:additional_params, {})),
+                           filters:           @filters.merge(opts.fetch(:filters, {})),
+                           includes:          @includes + opts.fetch(:includes, []),
+                           orders:            @orders + opts.fetch(:orders, []),
+                           fields:            @fields + opts.fetch(:fields, []))
+          end
       end
     end
   end

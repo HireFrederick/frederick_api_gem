@@ -55,13 +55,13 @@ describe FrederickAPI::V2::Helpers::Requestor do
 
     it 'gets response' do
       expect(requestor.get).to be response
-      expect(requestor).to have_received(:request).with(:get, path, {})
+      expect(requestor).to have_received(:request).with(:get, path, params: {})
     end
 
     context 'with params' do
       it 'gets response without primary key in params' do
         expect(requestor.get(params)).to be response
-        expect(requestor).to have_received(:request).with(:get, path, params.except(:id))
+        expect(requestor).to have_received(:request).with(:get, path, params: params.except(:id))
       end
     end
 
@@ -74,7 +74,8 @@ describe FrederickAPI::V2::Helpers::Requestor do
 
           it 'posts to get response without primary key in params' do
             expect(requestor.get(params)).to be response
-            expect(requestor).to have_received(:request).with(:post, path, params.except(:id), headers)
+            expect(requestor).to have_received(:request)
+                                   .with(:post, path, body: params.except(:id).to_json, additional_headers: headers)
           end
         end
       end
@@ -91,7 +92,7 @@ describe FrederickAPI::V2::Helpers::Requestor do
 
     it 'gets response' do
       expect(requestor.linked(url)).to be response
-      expect(requestor).to have_received(:request).with(:get, url, {})
+      expect(requestor).to have_received(:request).with(:get, url)
     end
 
     context 'url matches GET_VIA_POST_PATHS' do
@@ -108,7 +109,8 @@ describe FrederickAPI::V2::Helpers::Requestor do
 
           it 'posts to get response without primary key in params' do
             expect(requestor.linked(url)).to be response
-            expect(requestor).to have_received(:request).with(:post, path, expected_params, headers)
+            expect(requestor).to have_received(:request)
+                                   .with(:post, path, params: expected_params, additional_headers: headers)
           end
         end
 
@@ -122,7 +124,8 @@ describe FrederickAPI::V2::Helpers::Requestor do
 
           it 'posts to get response without primary key in params' do
             expect(requestor.linked(url)).to be response
-            expect(requestor).to have_received(:request).with(:post, path, expected_params, headers)
+            expect(requestor).to have_received(:request)
+                                   .with(:post, path, params: expected_params, additional_headers: headers)
           end
         end
       end
@@ -137,12 +140,17 @@ describe FrederickAPI::V2::Helpers::Requestor do
     let(:request_return) { instance_double(JsonApiClient::ResultSet, has_errors?: false) }
     let(:request_headers) { resource.custom_headers }
 
+    before { allow(request_return).to receive(:first).and_return(instance_double(FrederickAPI::V2::Contact)) }
+
     context 'success' do
-      before { allow(requestor).to receive(:make_request).and_return request_return }
+      before do
+        allow(requestor).to receive(:make_request).and_return request_return
+      end
 
       it 'makes request only once if there is no error' do
-        expect(requestor.send(:request, type, path, params)).to eq request_return
-        expect(requestor).to have_received(:make_request).with(type, path, params, request_headers)
+        expect(requestor.send(:request, type, path, params: params)).to eq request_return
+        expect(requestor).to have_received(:make_request)
+                               .with(type, path, params: params, headers: request_headers, body: nil)
       end
     end
 
@@ -160,11 +168,12 @@ describe FrederickAPI::V2::Helpers::Requestor do
       end
 
       context 'JsonApiClient::Errors::ServerError' do
-        let(:error) { JsonApiClient::Errors::ServerError.new('foo') }
+        let(:error) { JsonApiClient::Errors::ServerError.new(OpenStruct.new(status: 500)) }
 
         it 'makes request twice, is still successful' do
-          expect(requestor.send(:request, type, path, params)).to eq request_return
-          expect(requestor).to have_received(:make_request).with(type, path, params, request_headers).twice
+          expect(requestor.send(:request, type, path, params: params)).to eq request_return
+          expect(requestor).to have_received(:make_request)
+                                 .with(type, path, params: params, headers: request_headers, body: nil).twice
         end
       end
 
@@ -172,8 +181,9 @@ describe FrederickAPI::V2::Helpers::Requestor do
         let(:error) { JsonApiClient::Errors::ConnectionError.new('foo') }
 
         it 'makes request twice, is still successful' do
-          expect(requestor.send(:request, type, path, params)).to eq request_return
-          expect(requestor).to have_received(:make_request).with(type, path, params, request_headers).twice
+          expect(requestor.send(:request, type, path, params: params)).to eq request_return
+          expect(requestor).to have_received(:make_request)
+                                 .with(type, path, params: params, headers: request_headers, body: nil).twice
         end
       end
 
@@ -181,8 +191,9 @@ describe FrederickAPI::V2::Helpers::Requestor do
         let(:error) { JsonApiClient::Errors::NotFound.new('foo') }
 
         it 'makes request only once, and does not rescue error' do
-          expect { requestor.send(:request, type, path, params) }.to raise_error error
-          expect(requestor).to have_received(:make_request).with(type, path, params, request_headers).once
+          expect { requestor.send(:request, type, path, params: params) }.to raise_error error
+          expect(requestor).to have_received(:make_request)
+                                 .with(type, path, params: params, headers: request_headers, body: nil).once
         end
       end
 
@@ -190,8 +201,9 @@ describe FrederickAPI::V2::Helpers::Requestor do
         let(:error) { JsonApiClient::Errors::Conflict.new('foo') }
 
         it 'makes request only once, and does not rescue error' do
-          expect { requestor.send(:request, type, path, params) }.to raise_error error
-          expect(requestor).to have_received(:make_request).with(type, path, params, request_headers).once
+          expect { requestor.send(:request, type, path, params: params) }.to raise_error error
+          expect(requestor).to have_received(:make_request)
+                                 .with(type, path, params: params, headers: request_headers, body: nil).once
         end
       end
 
@@ -199,8 +211,73 @@ describe FrederickAPI::V2::Helpers::Requestor do
         let(:error) { StandardError.new('foo') }
 
         it 'calls request only once, and does not rescue error' do
-          expect { requestor.send(:request, type, path, params) }.to raise_error error
-          expect(requestor).to have_received(:make_request).with(type, path, params, request_headers).once
+          expect { requestor.send(:request, type, path, params: params) }.to raise_error error
+          expect(requestor).to have_received(:make_request)
+                                 .with(type, path, params: params, headers: request_headers, body: nil).once
+        end
+      end
+    end
+  end
+
+  describe '-handle_background' do
+    context 'with a ResultSet' do
+      let(:result) { JsonApiClient::ResultSet.new([record]) }
+
+      context 'not a background job' do
+        let(:record) { nil }
+
+        it 'returns result' do
+          expect(requestor.send(:handle_background, result)).to be(result)
+        end
+      end
+
+      context 'complete background job' do
+        let(:record) { instance_double(::FrederickAPI::V2::BackgroundJob, status: 'complete') }
+
+        it 'returns result' do
+          expect(requestor.send(:handle_background, result)).to be(result)
+        end
+      end
+
+      context 'incomplete background job' do
+        let(:links) { instance_double(JsonApiClient::Linking::Links, attributes: { 'self' => 'thisismyself' }) }
+        let(:record) do
+          instance_double(::FrederickAPI::V2::BackgroundJob, retry_after: 'retry', errors: ['messages'])
+        end
+
+        before do
+          allow(record).to receive(:links).and_return(links)
+          allow(requestor).to receive(:sleep).with(record.retry_after)
+          allow(record).to receive(:is_a?)
+          allow(record).to receive(:is_a?).with(::FrederickAPI::V2::BackgroundJob) { true }
+        end
+
+        context 'with errors' do
+          before do
+            allow(record).to receive(:status).and_return('error')
+            allow(record).to receive(:has_errors?).and_return(true)
+          end
+
+          it 'raises a BackgroundJobFailure error' do
+            expect do
+              requestor.send(:handle_background, result)
+            end.to raise_error(FrederickAPI::V2::Errors::BackgroundJobFailure)
+            expect(requestor).not_to have_received(:sleep).with(record.retry_after)
+          end
+        end
+
+        context 'with no errors' do
+          before do
+            allow(record).to receive(:status).and_return('queued')
+            allow(record).to receive(:has_errors?).and_return(false)
+            allow(requestor).to receive(:linked)
+            requestor.send(:handle_background, result)
+          end
+
+          it 'returns result' do
+            expect(requestor).to have_received(:sleep).with(record.retry_after)
+            expect(requestor).to have_received(:linked).with(links.attributes['self'])
+          end
         end
       end
     end
@@ -307,11 +384,12 @@ describe FrederickAPI::V2::Helpers::Requestor do
   end
 
   describe '-make_request' do
-    let(:response) { 'resp' }
+    let(:response) { instance_double(Faraday::Response, status: 200) }
     let(:expected_result) { 'expected' }
     let(:type) { 'type' }
     let(:path) { 'path' }
     let(:params) { 'params' }
+    let(:body) { 'body' }
     let(:headers) { 'headers' }
 
     before do
@@ -319,9 +397,29 @@ describe FrederickAPI::V2::Helpers::Requestor do
       allow(requestor.connection).to receive(:run).and_return response
     end
 
-    it 'returns expected' do
-      expect(requestor.send(:make_request, type, path, params, headers)).to be expected_result
-      expect(requestor.connection).to have_received(:run).with(type, path, params, headers)
+    context 'successful response' do
+      it 'returns expected' do
+        expect(requestor.send(:make_request, type, path, params: params, headers: headers, body: body)).to be(
+          expected_result
+        )
+        expect(requestor.connection).to have_received(:run)
+                                          .with(type, path, params: params, headers: headers, body: body)
+      end
+    end
+
+    context 'SEE OTHER response' do
+      let(:response) { instance_double(Faraday::Response, headers: { 'location' => 'alocation' }, status: 303) }
+
+      before do
+        allow(requestor).to receive(:linked).with(response.headers['location'])
+        requestor.send(:make_request, type, path, params: params, headers: headers, body: body)
+      end
+
+      it 'returns expected' do
+        expect(requestor.connection).to have_received(:run)
+                                          .with(type, path, params: params, headers: headers, body: body)
+        expect(requestor).to have_received(:linked).with(response.headers['location'])
+      end
     end
   end
 end

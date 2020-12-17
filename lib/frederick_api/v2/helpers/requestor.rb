@@ -7,6 +7,17 @@ module FrederickAPI
       class Requestor < JsonApiClient::Query::Requestor
         attr_reader :path
 
+        # For backward compatibility, preserve these JSON API client errors instead of raising
+        # FrederickAPI::Errors::Error
+        JSON_API_CLIENT_PASSTHROUGH_ERRORS = [
+          JsonApiClient::Errors::NotAuthorized,
+          JsonApiClient::Errors::AccessDenied,
+          JsonApiClient::Errors::NotFound,
+          JsonApiClient::Errors::Conflict,
+          JsonApiClient::Errors::ServerError,
+          JsonApiClient::Errors::UnexpectedStatus
+        ].freeze
+
         # Paths that may have an unbounded query param length so we should always use a POST
         # instead of a GET to get around AWS Cloudfront limitations
         GET_VIA_POST_PATHS = [
@@ -32,9 +43,11 @@ module FrederickAPI
           path = resource_path(params)
 
           params.delete(klass.primary_key)
-          return request(:post, path, params, 'X-Request-Method' => 'GET') if get_via_post_path?(path)
+          if get_via_post_path?(path)
+            return request(:post, path, body: params.to_json, additional_headers: { 'X-Request-Method' => 'GET' })
+          end
 
-          request(:get, path, params)
+          request(:get, path, params: params)
         end
 
         def linked(path)
@@ -43,21 +56,32 @@ module FrederickAPI
 
           path_without_params = "#{uri.scheme}://#{uri.host}#{uri.path}"
           params = uri.query ? CGI.parse(uri.query).each_with_object({}) { |(k, v), h| h[k] = v[0] } : {}
-          request(:post, path_without_params, params, 'X-Request-Method' => 'GET')
+          request(:post, path_without_params, params: params, additional_headers: { 'X-Request-Method' => 'GET' })
         end
 
         # Retry once on unhandled server errors
-        def request(type, path, params, additional_headers = {})
+        def request(type, path, params: nil, body: nil, additional_headers: {})
           headers = klass.custom_headers.merge(additional_headers)
+          make_request = proc do
+            handle_background(handle_errors(make_request(type, path, params: params, body: body, headers: headers)))
+          end
+
           begin
-            handle_errors(make_request(type, path, params, headers))
+            make_request.call
           rescue JsonApiClient::Errors::ConnectionError, JsonApiClient::Errors::ServerError => ex
             raise ex if ex.is_a?(JsonApiClient::Errors::NotFound) || ex.is_a?(JsonApiClient::Errors::Conflict)
-            handle_errors(make_request(type, path, params, headers))
+            make_request.call
           end
         end
 
         private
+          def handle_background(response)
+            return response unless
+                (job = response&.first).is_a?(::FrederickAPI::V2::BackgroundJob) && job.status != 'complete'
+            raise FrederickAPI::V2::Errors::BackgroundJobFailure, job if job.has_errors?
+            sleep job.retry_after
+            linked(job.links.attributes['self'])
+          end
 
           def handle_errors(result)
             return result unless result.has_errors?
@@ -66,12 +90,23 @@ module FrederickAPI
             raise error_klass, result
           end
 
-          def make_request(type, path, params, headers)
-            klass.parser.parse(klass, connection.run(type, path, params, headers))
+          def make_request(type, path, params:, body:, headers:)
+            faraday_response = connection.run(type, path, params: params, body: body, headers: headers)
+            return klass.parser.parse(klass, faraday_response) unless faraday_response.status == 303
+
+            linked(faraday_response.headers['location'])
+          rescue JsonApiClient::Errors::ClientError => e
+            handle_json_api_client_error(e)
           end
 
           def get_via_post_path?(path)
             GET_VIA_POST_PATHS.any? { |r| r.match(path) }
+          end
+
+          def handle_json_api_client_error(error)
+            raise error if JSON_API_CLIENT_PASSTHROUGH_ERRORS.include?(error.class)
+
+            klass.parser.parse(klass, error.env.response)
           end
       end
     end
