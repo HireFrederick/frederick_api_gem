@@ -10,7 +10,7 @@ describe FrederickAPI::V2::AutomationStep do
     describe 'read_only_attributes' do
       it 'has right read only attributes' do
         expect(described_class.read_only_attributes).to eq(
-          %i[id type links meta relationships location_id automation_id]
+          %i[id type links meta relationships location_id]
         )
       end
     end
