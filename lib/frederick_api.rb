@@ -25,6 +25,7 @@ require 'frederick_api/v2/business_category'
 
 # Core resources
 require 'frederick_api/v2/automation'
+require 'frederick_api/v2/automation_step'
 require 'frederick_api/v2/communication_content'
 require 'frederick_api/v2/contact'
 require 'frederick_api/v2/contact_property'
