@@ -35,6 +35,7 @@ require 'frederick_api/v2/interaction'
 require 'frederick_api/v2/role'
 require 'frederick_api/v2/campaign'
 require 'frederick_api/v2/email_document'
+require 'frederick_api/v2/communication_template'
 
 # Namespace for all Frederick API client methods/classes
 module FrederickAPI
