@@ -88,6 +88,21 @@ FrederickAPI::V2::Location.with_access_token(access_token) do
 end
 ```
 
+### Using Headers
+
+`JsonApiClient::Resource` exposes a way to add headers that is written over in the `with_access_token` method.
+An example use case is adding an `X-Universal-Customer` header.
+
+```ruby
+access_token = '9jsdo320fjfkfdksls30dfdcd919bcaa1b7804dbbebda0'
+headers = { 'X-Universal-Customer': '{"source_platform":"mindbody","source_location_id":"1","source_customer_id":"77"}' }
+FrederickAPI::V2::CommunicationTemplate.with_access_token_and_headers(access_token, headers) do
+  template = FrederickAPI::V2::CommunicationTemplate.create(template_attributes)
+
+  template.name
+  # => 'Name from Attrs'
+end
+```
 ### Nested Resources
 
 Nested resources must be accessed using `where` to scope the request:
