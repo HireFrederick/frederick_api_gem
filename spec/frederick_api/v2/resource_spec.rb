@@ -119,7 +119,7 @@ describe FrederickAPI::V2::Resource do
       allow(described_class).to receive(:with_headers).and_yield
     end
 
-    it 'calls .with_access_token_and_headers with args' do
+    it 'calls .with_headers with args' do
       described_class.with_access_token_and_headers(token, headers) { expected }
       expect(described_class).to have_received(:with_headers).with(
         authorization: "Bearer #{token}",
