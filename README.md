@@ -88,6 +88,21 @@ FrederickAPI::V2::Location.with_access_token(access_token) do
 end
 ```
 
+### Using Headers
+
+`Resource.with_access_token` is extended to take headers in the method `Resource.with_access_token_and_headers`. This is useful when we need to pass the universal customer to services that accept it.
+
+```ruby
+access_token = '9jsdo320fjfkfdksls30dfdcd919bcaa1b7804dbbebda0'
+headers = { 'X-Universal-Customer': '{"source_platform":"mindbody","source_location_id":"1","source_customer_id":"77"}' }
+
+FrederickAPI::V2::CommunicationTemplate.with_access_token_and_headers(access_token, headers) do
+  template = FrederickAPI::V2::CommunicationTemplate.create(template_attributes)
+
+  template.name
+  # => 'Name from Attrs'
+end
+```
 ### Nested Resources
 
 Nested resources must be accessed using `where` to scope the request:
@@ -111,4 +126,4 @@ Polling until the job is complete, fetching and returning the completed resource
 * A FrederickAPI::V2::Errors::BackgroundJobFailure exception is raised if the API returns 
 an error on an asyncronous job.
 * A BackgroundJob Resource will be returned from the client in the case that a successful 
- job does not return a resources.  
+ job does not return a resource.
