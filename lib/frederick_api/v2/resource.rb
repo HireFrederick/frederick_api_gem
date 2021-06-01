@@ -36,7 +36,16 @@ module FrederickAPI
       end
 
       def self.with_access_token(token)
-        with_headers(authorization: "Bearer #{token}") do
+        with_access_token_and_headers(token) do
+          yield
+        end
+      end
+
+      def self.with_access_token_and_headers(token, headers = {})
+        with_headers(
+          authorization: "Bearer #{token}",
+          **headers
+        ) do
           yield
         end
       end

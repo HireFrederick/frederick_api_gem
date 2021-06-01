@@ -90,6 +90,50 @@ describe FrederickAPI::V2::Resource do
     end
   end
 
+  describe '.with_access_token' do
+    let(:token) { 'token' }
+    let(:expected) { 'foo' }
+
+    before do
+      allow(described_class).to receive(:with_access_token_and_headers).and_yield
+    end
+
+    it 'calls .with_access_token_and_headers with args' do
+      described_class.with_access_token(token) { expected }
+      expect(described_class).to have_received(:with_access_token_and_headers).with(token)
+    end
+
+    it 'yields with no args' do
+      expect do |block|
+        described_class.with_access_token(token, &block)
+      end.to yield_with_no_args
+    end
+  end
+
+  describe '.with_access_token_and_headers' do
+    let(:token) { 'token' }
+    let(:headers) { { header_1: 'h1' } }
+    let(:expected) { 'foo' }
+
+    before do
+      allow(described_class).to receive(:with_headers).and_yield
+    end
+
+    it 'calls .with_headers with args' do
+      described_class.with_access_token_and_headers(token, headers) { expected }
+      expect(described_class).to have_received(:with_headers).with(
+        authorization: "Bearer #{token}",
+        **headers
+      )
+    end
+
+    it 'yields with no args' do
+      expect do |block|
+        described_class.with_access_token_and_headers(token, headers, &block)
+      end.to yield_with_no_args
+    end
+  end
+
   describe '.site' do
     context 'config base_url is set' do
       it 'is assigned correctly' do
