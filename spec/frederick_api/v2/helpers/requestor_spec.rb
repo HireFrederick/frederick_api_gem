@@ -110,7 +110,7 @@ describe FrederickAPI::V2::Helpers::Requestor do
           it 'posts to get response without primary key in params' do
             expect(requestor.linked(url)).to be response
             expect(requestor).to have_received(:request)
-                                   .with(:post, path, params: expected_params, additional_headers: headers)
+                                   .with(:post, path, body: expected_params.to_json, additional_headers: headers)
           end
         end
 
@@ -125,7 +125,7 @@ describe FrederickAPI::V2::Helpers::Requestor do
           it 'posts to get response without primary key in params' do
             expect(requestor.linked(url)).to be response
             expect(requestor).to have_received(:request)
-                                   .with(:post, path, params: expected_params, additional_headers: headers)
+                                   .with(:post, path, body: expected_params.to_json, additional_headers: headers)
           end
         end
       end
