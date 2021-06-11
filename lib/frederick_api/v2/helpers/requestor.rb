@@ -56,7 +56,7 @@ module FrederickAPI
 
           path_without_params = "#{uri.scheme}://#{uri.host}#{uri.path}"
           params = uri.query ? CGI.parse(uri.query).each_with_object({}) { |(k, v), h| h[k] = v[0] } : {}
-          request(:post, path_without_params, params: params, additional_headers: { 'X-Request-Method' => 'GET' })
+          request(:post, path_without_params, body: params.to_json, additional_headers: { 'X-Request-Method' => 'GET' })
         end
 
         # Retry once on unhandled server errors
