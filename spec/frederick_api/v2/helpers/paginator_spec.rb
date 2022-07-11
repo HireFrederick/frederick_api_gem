@@ -88,4 +88,21 @@ describe FrederickAPI::V2::Helpers::Paginator do
       expect(paginator.all_records).to eq(result + result2 + result3)
     end
   end
+
+  describe '#next_result_set' do
+    let(:result2) { %w[c] }
+    let(:new_result_set) do
+      rs = JsonApiClient::ResultSet.new(result2)
+      rs.pages = paginator
+      rs
+    end
+
+    before do
+      expect(paginator).to receive(:next).with(no_args).and_return(new_result_set)
+    end
+
+    it 'fetch the next link' do
+      expect(paginator.next_result_set(paginator.result_set)).to eq(new_result_set)
+    end
+  end
 end
