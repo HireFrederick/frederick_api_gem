@@ -25,6 +25,8 @@ module FrederickAPI
           results
         end
 
+        # refetching the next link if no response is found due to elastic cache unknown beheviour.
+        # bug link: https://dev.azure.com/mindbody/Marketing%20Products/_workitems/edit/1101861
         def next_result_set(current_result_set)
           if current_result_set
             response = current_result_set.pages.next
