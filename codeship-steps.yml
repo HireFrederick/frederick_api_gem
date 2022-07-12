@@ -1,4 +1,4 @@
-- type: parallel
+- type: serial
   steps:
   - name: rspec
     service: main
