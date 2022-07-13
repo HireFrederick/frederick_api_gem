@@ -17,12 +17,11 @@ module FrederickAPI
 
           (total_pages - current_page).times do
             first_resource.class.with_headers(first_resource.custom_headers) do
-              current_result_set = current_result_set ? current_result_set.pages.next : self.result_set.pages.next
+              current_result_set = next_result_set(current_result_set)
               raise 'next link not found' unless current_result_set
               results.push(*current_result_set.to_a)
             end
           end
-
           results
         end
 
@@ -47,6 +46,18 @@ module FrederickAPI
         def current_page
           params.fetch("page.#{page_param}", 1).to_i
         end
+
+        private
+
+          # refetching the next link if no response is found.
+          def next_result_set(current_result_set)
+            if current_result_set
+              response = current_result_set.pages.next
+              response.present? ? response : current_result_set.pages.next
+            else
+              self.result_set.pages.next
+            end
+          end
       end
     end
   end

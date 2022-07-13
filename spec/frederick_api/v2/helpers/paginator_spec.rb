@@ -77,15 +77,46 @@ describe FrederickAPI::V2::Helpers::Paginator do
       rs
     end
 
-    before do
-      expect(paginator).to receive(:current_page).with(no_args).and_return(current_page)
-      expect(paginator).to receive(:total_pages).with(no_args).and_return(total_pages)
-      expect(paginator).to receive(:next).with(no_args).and_return(new_result_set)
-      expect(paginator).to receive(:next).with(no_args).and_return(new_result_set2)
+    context 'returns result from all pages' do
+      before do
+        expect(paginator).to receive(:current_page).with(no_args).and_return(current_page)
+        expect(paginator).to receive(:total_pages).with(no_args).and_return(total_pages)
+        expect(paginator).to receive(:next).with(no_args).and_return(new_result_set)
+        expect(paginator).to receive(:next).with(no_args).and_return(new_result_set2)
+      end
+
+      it 'aggregates all the remaining pages' do
+        expect(paginator.all_records).to eq(result + result2 + result3)
+      end
     end
 
-    it 'aggregates all the remaining pages' do
-      expect(paginator.all_records).to eq(result + result2 + result3)
+    context 'returns blank data from pages' do
+      before do
+        expect(paginator).to receive(:current_page).with(no_args).and_return(current_page)
+        expect(paginator).to receive(:total_pages).with(no_args).and_return(total_pages)
+        expect(paginator).to receive(:next).with(no_args).and_return(nil)
+      end
+
+      it 'raise the next link not found' do
+        expect { paginator.all_records }.to raise_error 'next link not found'
+      end
+    end
+  end
+
+  describe '#next_result_set' do
+    let(:result2) { %w[c] }
+    let(:new_result_set) do
+      rs = JsonApiClient::ResultSet.new(result2)
+      rs.pages = paginator
+      rs
+    end
+
+    before do
+      expect(paginator).to receive(:next).with(no_args).and_return(new_result_set)
+    end
+
+    it 'fetches the next link' do
+      expect(paginator.send(:next_result_set, paginator.result_set)).to eq(new_result_set)
     end
   end
 end
