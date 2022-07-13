@@ -115,7 +115,7 @@ describe FrederickAPI::V2::Helpers::Paginator do
       expect(paginator).to receive(:next).with(no_args).and_return(new_result_set)
     end
 
-    it 'fetch the next link' do
+    it 'fetches the next link' do
       expect(paginator.send(:next_result_set, paginator.result_set)).to eq(new_result_set)
     end
   end
