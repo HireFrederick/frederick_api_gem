@@ -33,9 +33,7 @@ module FrederickAPI
           if links['last']
             uri = result_set.links.link_url_for('last')
             last_params = params_for_uri(uri)
-            last_params.fetch("page.#{page_param}") do
-              current_page
-            end.to_i
+            last_params.fetch("page.#{page_param}", current_page).to_i
           else
             current_page
           end
