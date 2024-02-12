@@ -15,13 +15,17 @@ module FrederickAPI
           results = self.result_set.to_a
           first_resource = self.result_set.first
 
-          (total_pages - current_page).times do
+          remaining_pages = total_pages - current_page
+
+          remaining_pages.times do |page|
             first_resource.class.with_headers(first_resource.custom_headers) do
               current_result_set = next_result_set(current_result_set)
-              raise 'next link not found' unless current_result_set
+              break if (page + 1 >= remaining_pages) && current_result_set.nil?
+              raise 'next link not found' if current_result_set.nil?
               results.push(*current_result_set.to_a)
             end
           end
+
           results
         end
 
@@ -29,9 +33,7 @@ module FrederickAPI
           if links['last']
             uri = result_set.links.link_url_for('last')
             last_params = params_for_uri(uri)
-            last_params.fetch("page.#{page_param}") do
-              current_page
-            end.to_i
+            last_params.fetch("page.#{page_param}", current_page).to_i
           else
             current_page
           end
@@ -53,10 +55,11 @@ module FrederickAPI
           def next_result_set(current_result_set)
             if current_result_set
               response = current_result_set.pages.next
-              response.present? ? response : current_result_set.pages.next
             else
-              self.result_set.pages.next
+              response = self.result_set.pages.next
             end
+
+            response.present? ? response : nil
           end
       end
     end
