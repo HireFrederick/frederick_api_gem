@@ -7,6 +7,7 @@ module FrederickAPI
       # Fixes param names for pagination
       # Also adds ability to get all records from a paginated API
       class Paginator < JsonApiClient::Paginating::Paginator
+        include FrederickAPI::V2::Helpers::Retrier
         self.page_param = 'number'
         self.per_page_param = 'size'
 
@@ -17,8 +18,10 @@ module FrederickAPI
 
           (total_pages - current_page).times do
             first_resource.class.with_headers(first_resource.custom_headers) do
-              current_result_set = next_result_set(current_result_set)
-              raise 'next link not found' unless current_result_set
+              retry_block(FrederickAPI.config.retry_times) do
+                current_result_set = current_result_set ? current_result_set.pages.next : self.result_set.pages.next
+                 raise 'next link not found' unless current_result_set
+              end
               results.push(*current_result_set.to_a)
             end
           end
@@ -46,18 +49,6 @@ module FrederickAPI
         def current_page
           params.fetch("page.#{page_param}", 1).to_i
         end
-
-        private
-
-          # refetching the next link if no response is found.
-          def next_result_set(current_result_set)
-            if current_result_set
-              response = current_result_set.pages.next
-              response.present? ? response : current_result_set.pages.next
-            else
-              self.result_set.pages.next
-            end
-          end
       end
     end
   end
