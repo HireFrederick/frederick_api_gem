@@ -29,7 +29,7 @@ module FrederickAPI
         end
 
         def total_pages
-          if links['last']
+          if result_set && result_set.links
             uri = result_set.links.link_url_for('last')
             last_params = params_for_uri(uri)
             last_params.fetch("page.#{page_param}") do

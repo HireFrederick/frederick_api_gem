@@ -12,6 +12,14 @@ describe FrederickAPI::V2::Helpers::Paginator do
     result_set.pages = subj
     subj
   end
+  let(:links) { JsonApiClient::Linking::TopLevelLinks.new(
+    FrederickAPI::V2::Resource,
+    {
+    'first'=>'https://testlinks.com/?page.number=1&page.size=10', 
+    'last'=> 'https://testlinks.com/?page.number=8&page.size=10'
+    }
+    )
+  }
   let(:retry_times) { 3 }
 
   before { allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times) }
@@ -28,13 +36,22 @@ describe FrederickAPI::V2::Helpers::Paginator do
   end
 
   describe '#total_pages' do
-    let(:links) { {} }
-
-    before do
-      expect(paginator).to receive(:links).and_return links
+   
+    context 'with last links' do
+      before do
+        expect(result_set).to receive(:links).twice.and_return links
+      end
+      
+      it 'returns current page from last link' do
+        expect(paginator.total_pages).to eq 8
+      end
     end
 
     context 'no last link' do
+      before do
+        expect(result_set).to receive(:links).and_return nil
+      end
+
       it 'current page' do
         expect(paginator.total_pages).to eq 1
       end
