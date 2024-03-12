@@ -12,6 +12,9 @@ describe FrederickAPI::V2::Helpers::Paginator do
     result_set.pages = subj
     subj
   end
+  let(:retry_times) { 3 }
+
+  before { allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times) }
 
   describe 'superclass' do
     it { expect(described_class.superclass).to eq JsonApiClient::Paginating::Paginator }
@@ -94,7 +97,7 @@ describe FrederickAPI::V2::Helpers::Paginator do
       before do
         expect(paginator).to receive(:current_page).with(no_args).and_return(current_page)
         expect(paginator).to receive(:total_pages).with(no_args).and_return(total_pages)
-        expect(paginator).to receive(:next).with(no_args).and_return(nil)
+        expect(paginator).to receive(:next).exactly(retry_times).times.with(no_args).and_return(nil)
       end
 
       it 'raise the next link not found' do
@@ -103,20 +106,35 @@ describe FrederickAPI::V2::Helpers::Paginator do
     end
   end
 
-  describe '#next_result_set' do
-    let(:result2) { %w[c] }
-    let(:new_result_set) do
-      rs = JsonApiClient::ResultSet.new(result2)
-      rs.pages = paginator
-      rs
+  describe '#retry_block' do
+    let(:current_page) { 1 }
+    let(:total_pages) { 2 }
+
+    context '2nd retry returns data' do
+      before do
+        expect(paginator).to receive(:current_page).with(no_args).and_return(current_page)
+        expect(paginator).to receive(:total_pages).with(no_args).and_return(total_pages)
+        expect(paginator).to receive(:next).with(no_args).and_return(nil)
+        expect(paginator).to receive(:next).with(no_args).and_return(result_set)
+      end
+
+      it 'retry 2 times' do
+        expect(paginator.all_records).to eq(result+result_set)
+      end
     end
 
-    before do
-      expect(paginator).to receive(:next).with(no_args).and_return(new_result_set)
-    end
+    context 'data is not returned after n retry' do
+      before do
+        expect(paginator).to receive(:current_page).with(no_args).and_return(current_page)
+        expect(paginator).to receive(:total_pages).with(no_args).and_return(total_pages)
+        expect(paginator).to receive(:next).with(no_args).and_return(nil)
+        expect(paginator).to receive(:next).with(no_args).and_return(nil)
+        expect(paginator).to receive(:next).with(no_args).and_return(nil)
+      end
 
-    it 'fetches the next link' do
-      expect(paginator.send(:next_result_set, paginator.result_set)).to eq(new_result_set)
+      it 'retries n times and raises error' do
+        expect { paginator.all_records }.to raise_error 'next link not found'
+      end
     end
   end
 end

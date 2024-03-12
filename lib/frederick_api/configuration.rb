@@ -15,15 +15,17 @@ module FrederickAPI # :nodoc:
         'https://api.staging.hirefrederick.com',
       public_base_url: ENV['FREDERICK_API_PUBLIC_BASE_URL'] ||
         'https://api.public.staging.hirefrederick.com',
-      api_key: ENV['FREDERICK_API_KEY']
+      api_key: ENV['FREDERICK_API_KEY'],
+      retry_times: (ENV['FREDERICK_API_RETRY_TIMES'] || 1).to_i
     }.freeze
 
-    attr_accessor :base_url, :public_base_url, :api_key
+    attr_accessor :base_url, :public_base_url, :api_key, :retry_times
 
     def initialize
       @base_url = DEFAULTS[:base_url]
       @public_base_url = DEFAULTS[:public_base_url]
       @api_key = DEFAULTS[:api_key]
+      @retry_times = DEFAULTS[:retry_times]
     end
   end
 
