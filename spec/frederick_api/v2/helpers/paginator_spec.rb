@@ -119,7 +119,7 @@ describe FrederickAPI::V2::Helpers::Paginator do
       end
 
       it 'retry 2 times' do
-        expect(paginator.all_records).to eq(result+result_set)
+        expect(paginator.all_records).to eq(result + result_set)
       end
     end
 
