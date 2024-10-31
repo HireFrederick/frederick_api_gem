@@ -8,7 +8,7 @@ module FrederickAPI
           attempts = 1
           begin
             yield
-          rescue =>
+          rescue
             attempts += 1
             attempts <= n ? retry : raise
             sleep (attempts * 5)

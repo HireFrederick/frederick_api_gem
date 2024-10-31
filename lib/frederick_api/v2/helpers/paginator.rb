@@ -11,6 +11,7 @@ module FrederickAPI
         self.page_param = 'number'
         self.per_page_param = 'size'
 
+        # rubocop:disable Metrics/AbcSize
         def all_records
           current_result_set = nil
           results = self.result_set.to_a
@@ -27,6 +28,7 @@ module FrederickAPI
           end
           results
         end
+        # rubocop:enable Metrics/AbcSize
 
         def total_pages
           if links['last']
