@@ -11,7 +11,7 @@ module FrederickAPI
           rescue
             attempts += 1
             attempts <= n ? retry : raise
-            sleep (attempts * 5)
+            sleep(attempts * 5)
           end
         end
       end
