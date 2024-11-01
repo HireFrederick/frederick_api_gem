@@ -13,7 +13,8 @@ describe FrederickAPI::V2::Helpers::Retrier do
   let(:retry_times) { 3 }
   let(:calling_times) { 0 }
   let(:dummy_class_instance) { dummy_class.new }
-  let(:test_block) { -> { dummy_class_instance.dummy_method; raise 'Exception: test' } }
+  let(:test_block) { -> { dummy_class_instance.dummy_method
+    raise 'Exception: test' } }
 
   before { allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times) }
 
