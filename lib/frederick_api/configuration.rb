@@ -23,7 +23,7 @@ module FrederickAPI # :nodoc:
       emails_per_day_limit_enabled: !ENV['EMAILS_PER_DAY_LIMIT'].to_s.empty?
     }.freeze
 
-    attr_accessor :base_url, :public_base_url, :api_key, :retry_times, :jsonapi_campaign_check_enabled, 
+    attr_accessor :base_url, :public_base_url, :api_key, :retry_times, :jsonapi_campaign_check_enabled,
                   :emails_per_day_limit, :frolodex_batch_fetch_size, :emails_per_day_limit_enabled
 
     def initialize
