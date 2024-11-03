@@ -17,7 +17,17 @@ module FrederickAPI
           results = self.result_set.to_a
           first_resource = self.result_set.first
 
-          (total_pages - current_page).times do
+          pages_to_be_fetched = if FrederickAPI.config.jsonapi_campaign_check_enabled &&
+            is_campaign_source?
+            [(total_pages - current_page), get_eligible_page_count + 1].min
+          else
+            total_pages - current_page
+          end
+
+          # log pages fetched for further analysis.
+          NewRelic::Agent.record_metric('FrolodexPageFetchCount', pages_to_be_fetched) rescue nil
+
+          pages_to_be_fetched.times do
             first_resource.class.with_headers(first_resource.custom_headers) do
               retry_block(FrederickAPI.config.retry_times) do
                 current_result_set = current_result_set ? current_result_set.pages.next : self.result_set.pages.next
@@ -50,6 +60,31 @@ module FrederickAPI
 
         def current_page
           params.fetch("page.#{page_param}", 1).to_i
+        end
+
+        def is_campaign_source?
+          uri = result_set.links.link_url_for('first')
+          first_params = params_for_uri(uri)
+          filter_string = first_params.fetch("filter.filters")
+          filters_array = JSON.parse(filter_string).flatten
+          filters_array.each do |filter_hash|
+            if filter_hash["operator"] == "has_no_interaction" && filter_hash["interaction_type"] == "delivered_email" && filter_hash["source_type"]  == "Campaign"
+              return true
+            end
+          end
+
+          false
+        end
+
+        def get_eligible_page_count
+          return (total_pages - current_page) unless FrederickAPI.config.emails_per_day_limit_enabled
+          url = first_link
+          location_id = url.match(%r{locations/([a-f0-9\-]+)/contacts})[1]
+          cache_key = "emails_sent_today_#{location_id}"
+          emails_sent_today = Rails.cache.read(cache_key) || 0
+          emails_per_day_limit = FrederickAPI.config.emails_per_day_limit
+          batch_size = FrederickAPI.config.frolodex_batch_fetch_size || 1000
+          (emails_per_day_limit - emails_sent_today)/batch_size
         end
       end
     end

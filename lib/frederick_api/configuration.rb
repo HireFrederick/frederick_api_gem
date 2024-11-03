@@ -16,7 +16,11 @@ module FrederickAPI # :nodoc:
       public_base_url: ENV['FREDERICK_API_PUBLIC_BASE_URL'] ||
         'https://api.public.staging.hirefrederick.com',
       api_key: ENV['FREDERICK_API_KEY'],
-      retry_times: (ENV['FREDERICK_API_RETRY_TIMES'] || 1).to_i
+      retry_times: (ENV['FREDERICK_API_RETRY_TIMES'] || 1).to_i,
+      jsonapi_campaign_check_enabled: (ENV['JSONAPI_CAMPAIGN_CHECK_ENABLED'] == 'true'),
+      emails_per_day_limit: (ENV['EMAILS_PER_DAY_LIMIT'] || 1000).to_i,
+      frolodex_batch_fetch_size: (ENV['FROLODEX_BATCH_FETCH_SIZE'] || 1000).to_i,
+      emails_per_day_limit_enabled: !ENV['EMAILS_PER_DAY_LIMIT'].to_s.empty?
     }.freeze
 
     attr_accessor :base_url, :public_base_url, :api_key, :retry_times
