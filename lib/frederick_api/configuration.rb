@@ -30,6 +30,10 @@ module FrederickAPI # :nodoc:
       @public_base_url = DEFAULTS[:public_base_url]
       @api_key = DEFAULTS[:api_key]
       @retry_times = DEFAULTS[:retry_times]
+      @jsonapi_campaign_check_enabled = DEFAULTS[:jsonapi_campaign_check_enabled]
+      @emails_per_day_limit = DEFAULTS[:emails_per_day_limit]
+      @frolodex_batch_fetch_size = DEFAULTS[:frolodex_batch_fetch_size]
+      @emails_per_day_limit_enabled = DEFAULTS[:emails_per_day_limit_enabled]
     end
   end
 
