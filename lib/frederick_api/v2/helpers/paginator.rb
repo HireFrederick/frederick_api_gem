@@ -26,7 +26,7 @@ module FrederickAPI
 
           # log pages fetched for further analysis.
           begin
-            NewRelic::Agent.record_metric('FrolodexPageFetchCount', pages_to_be_fetched) 
+            NewRelic::Agent.record_metric('FrolodexPageFetchCount', pages_to_be_fetched)
           rescue
             nil
           end
@@ -73,8 +73,8 @@ module FrederickAPI
           filters_array = JSON.parse(filter_string).flatten
           filters_array.each do |filter_hash|
             if filter_hash['operator'] == 'has_no_interaction' &&
-               filter_hash['interaction_type'] == 'delivered_email' &&
-               filter_hash['source_type'] == 'Campaign'
+                filter_hash['interaction_type'] == 'delivered_email' &&
+                filter_hash['source_type'] == 'Campaign'
               return true
             end
           end
