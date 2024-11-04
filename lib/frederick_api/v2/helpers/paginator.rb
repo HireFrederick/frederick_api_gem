@@ -16,22 +16,10 @@ module FrederickAPI
           current_result_set = nil
           results = self.result_set.to_a
           first_resource = self.result_set.first
+          page_fetch_count = pages_to_be_fetched
+          nr_log_page_count(page_fetch_count)
 
-          pages_to_be_fetched = if FrederickAPI.config.jsonapi_campaign_check_enabled &&
-              is_campaign_source?
-                                  [(total_pages - current_page), eligible_page_count + 1].min
-                                else
-                                  total_pages - current_page
-                                end
-
-          # log pages fetched for further analysis.
-          begin
-            NewRelic::Agent.record_metric('FrolodexPageFetchCount', pages_to_be_fetched)
-          rescue
-            nil
-          end
-
-          pages_to_be_fetched.times do
+          page_fetch_count.times do
             first_resource.class.with_headers(first_resource.custom_headers) do
               retry_block(FrederickAPI.config.retry_times) do
                 current_result_set = current_result_set ? current_result_set.pages.next : self.result_set.pages.next
@@ -91,6 +79,21 @@ module FrederickAPI
           emails_per_day_limit = FrederickAPI.config.emails_per_day_limit
           batch_size = FrederickAPI.config.frolodex_batch_fetch_size || 1000
           (emails_per_day_limit - emails_sent_today) / batch_size
+        end
+
+        def pages_to_be_fetched
+          if FrederickAPI.config.jsonapi_campaign_check_enabled && is_campaign_source?
+            [total_pages - current_page, eligible_page_count + 1].min
+          else
+            total_pages - current_page
+          end
+        end
+
+        # log pages fetched for further analysis.
+        def nr_log_page_count(page_count)
+          NewRelic::Agent.record_metric('FrolodexPageFetchCount', page_count)
+        rescue
+          nil
         end
       end
     end
