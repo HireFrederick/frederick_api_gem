@@ -13,7 +13,7 @@ describe FrederickAPI::V2::Helpers::Paginator do
     subj
   end
   let(:retry_times) { 3 }
-  let(:links) { { 'first' => 'first_link', 'last' => 'last_link' } }
+  let(:links) { { 'first' => 'first_link' } }
   let(:eligible_page_count_val) { 5 }
 
   before { allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times) }
@@ -135,6 +135,16 @@ describe FrederickAPI::V2::Helpers::Paginator do
       it 'retries n times and raises error' do
         expect { paginator.all_records }.to raise_error 'next link not found'
       end
+    end
+  end
+
+  describe '#first_link' do
+    before do
+      allow(paginator).to receive(:links).and_return links
+    end
+
+    it 'returns the first link' do
+      expect(paginator.first_link).to eq('first_link')
     end
   end
 

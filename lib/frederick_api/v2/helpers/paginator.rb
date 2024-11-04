@@ -73,7 +73,7 @@ module FrederickAPI
         def eligible_page_count
           return (total_pages - current_page) unless FrederickAPI.config.emails_per_day_limit_enabled
 
-          url = result_set.links.link_url_for('first')
+          url = first_link
           location_id = url.match(%r{locations/([a-f0-9\-]+)/contacts})[1]
           cache_key = "emails_sent_today_#{location_id}"
           emails_sent_today = Rails.cache.read(cache_key) || 0
@@ -81,7 +81,7 @@ module FrederickAPI
           batch_size = FrederickAPI.config.frolodex_batch_fetch_size || 1000
           (emails_per_day_limit - emails_sent_today) / batch_size
         rescue => e
-          NewRelic::Agent.notice_error(e, first_link: url)
+          NewRelic::Agent.notice_error(e, first_link: first_link)
         end
 
         def pages_to_be_fetched
@@ -97,6 +97,10 @@ module FrederickAPI
           NewRelic::Agent.record_metric('FrolodexPageFetchCount', page_count)
         rescue
           nil
+        end
+
+        def first_link
+          links['first']
         end
       end
     end
