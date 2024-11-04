@@ -13,7 +13,8 @@ describe FrederickAPI::V2::Helpers::Paginator do
     subj
   end
   let(:retry_times) { 3 }
-  let(:links) { {'first' => 'first_link'} }
+  let(:links) { { 'first' => 'first_link' } }
+  let(:eligible_page_count_val) { 5 }
 
   before { allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times) }
 
@@ -138,13 +139,24 @@ describe FrederickAPI::V2::Helpers::Paginator do
   end
 
   describe '#first_link' do
-
     before do
       allow(paginator).to receive(:links).and_return links
     end
 
     it 'returns the first link' do
       expect(paginator.first_link).to eq('first_link')
+    end
+  end
+
+  describe '#pages_to_be_fetched' do
+    before do
+      allow(paginator).to receive(:eligible_page_count).and_return eligible_page_count_val
+      allow(FrederickAPI.config).to receive(:jsonapi_campaign_check_enabled).and_return(true)
+      allow(paginator).to receive(:is_campaign_source?).and_return(true)
+    end
+
+    it 'returns the min pages count value' do
+      expect(paginator.pages_to_be_fetched).to eq(0)
     end
   end
 end
