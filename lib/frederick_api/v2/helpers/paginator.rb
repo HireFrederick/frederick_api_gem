@@ -99,9 +99,9 @@ module FrederickAPI
           nil
         end
 
-        # def first_link
-        #   links['first']
-        # end
+        def first_link
+          links['first']
+        end
       end
     end
   end
