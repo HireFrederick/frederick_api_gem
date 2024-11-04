@@ -31,6 +31,26 @@ module FrederickAPI
       it 'sets @api_key' do
         expect(FrederickAPI.config.api_key).to eq '1234-4567-1234-5678'
       end
+
+      it 'sets @retry_times' do
+        expect(FrederickAPI.config.retry_times).to eq '1234-4567-1234-5678'
+      end
+
+      it 'sets @jsonapi_campaign_check_enabled' do
+        expect(FrederickAPI.config.jsonapi_campaign_check_enabled).to eq '1234-4567-1234-5678'
+      end
+
+      it 'sets @emails_per_day_limit' do
+        expect(FrederickAPI.config.emails_per_day_limit).to eq '1234-4567-1234-5678'
+      end
+
+      it 'sets @frolodex_batch_fetch_size' do
+        expect(FrederickAPI.config.frolodex_batch_fetch_size).to eq '1234-4567-1234-5678'
+      end
+
+      it 'sets @emails_per_day_limit_enabled' do
+        expect(FrederickAPI.config.emails_per_day_limit_enabled).to eq '1234-4567-1234-5678'
+      end
     end
   end
 
