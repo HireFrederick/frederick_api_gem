@@ -143,10 +143,12 @@ describe FrederickAPI::V2::Helpers::Paginator do
       allow(paginator).to receive(:eligible_page_count).and_return eligible_page_count_val
       allow(FrederickAPI.config).to receive(:jsonapi_campaign_check_enabled).and_return(true)
       allow(paginator).to receive(:is_campaign_source?).and_return(true)
+      allow(paginator).to receive(:total_pages?).and_return(8)
+      allow(paginator).to receive(:current_page).and_return(1)
     end
 
     it 'returns the min pages count value' do
-      expect(paginator.pages_to_be_fetched).to eq(0)
+      expect(paginator.pages_to_be_fetched).to eq(6)
     end
   end
 end
