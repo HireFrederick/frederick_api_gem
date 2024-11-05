@@ -12,6 +12,11 @@ describe FrederickAPI::V2::Helpers::Paginator do
     result_set.pages = subj
     subj
   end
+  let(:retry_times) { 3 }
+  let(:links) { { 'first' => 'first_link' } }
+  let(:eligible_page_count_val) { 5 }
+
+  before { allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times) }
 
   describe 'superclass' do
     it { expect(described_class.superclass).to eq JsonApiClient::Paginating::Paginator }
@@ -25,8 +30,6 @@ describe FrederickAPI::V2::Helpers::Paginator do
   end
 
   describe '#total_pages' do
-    let(:links) { {} }
-
     before do
       expect(paginator).to receive(:links).and_return links
     end
@@ -94,7 +97,7 @@ describe FrederickAPI::V2::Helpers::Paginator do
       before do
         expect(paginator).to receive(:current_page).with(no_args).and_return(current_page)
         expect(paginator).to receive(:total_pages).with(no_args).and_return(total_pages)
-        expect(paginator).to receive(:next).with(no_args).and_return(nil)
+        expect(paginator).to receive(:next).exactly(retry_times).times.with(no_args).and_return(nil)
       end
 
       it 'raise the next link not found' do
@@ -103,20 +106,74 @@ describe FrederickAPI::V2::Helpers::Paginator do
     end
   end
 
-  describe '#next_result_set' do
-    let(:result2) { %w[c] }
-    let(:new_result_set) do
-      rs = JsonApiClient::ResultSet.new(result2)
-      rs.pages = paginator
-      rs
+  describe '#retry_block' do
+    let(:current_page) { 1 }
+    let(:total_pages) { 2 }
+
+    context '2nd retry returns data' do
+      before do
+        expect(paginator).to receive(:current_page).with(no_args).and_return(current_page)
+        expect(paginator).to receive(:total_pages).with(no_args).and_return(total_pages)
+        expect(paginator).to receive(:next).with(no_args).and_return(nil)
+        expect(paginator).to receive(:next).with(no_args).and_return(result_set)
+      end
+
+      it 'retry 2 times' do
+        expect(paginator.all_records).to eq(result + result_set)
+      end
     end
 
-    before do
-      expect(paginator).to receive(:next).with(no_args).and_return(new_result_set)
-    end
+    context 'data is not returned after n retry' do
+      before do
+        expect(paginator).to receive(:current_page).with(no_args).and_return(current_page)
+        expect(paginator).to receive(:total_pages).with(no_args).and_return(total_pages)
+        expect(paginator).to receive(:next).with(no_args).and_return(nil)
+        expect(paginator).to receive(:next).with(no_args).and_return(nil)
+        expect(paginator).to receive(:next).with(no_args).and_return(nil)
+      end
 
-    it 'fetches the next link' do
-      expect(paginator.send(:next_result_set, paginator.result_set)).to eq(new_result_set)
+      it 'retries n times and raises error' do
+        expect { paginator.all_records }.to raise_error 'next link not found'
+      end
     end
   end
+
+  describe '#first_link' do
+    before do
+      allow(paginator).to receive(:links).and_return links
+    end
+
+    it 'returns the first link' do
+      expect(paginator.first_link).to eq('first_link')
+    end
+  end
+
+  describe '#pages_to_be_fetched' do
+    before do
+      allow(paginator).to receive(:eligible_page_count).and_return eligible_page_count_val
+      allow(FrederickAPI.config).to receive(:jsonapi_campaign_check_enabled).and_return(true)
+      allow(paginator).to receive(:is_campaign_source?).and_return(true)
+      allow(paginator).to receive(:total_pages).and_return(8)
+      allow(paginator).to receive(:current_page).and_return(1)
+    end
+
+    it 'returns the min pages count value' do
+      expect(paginator.pages_to_be_fetched).to eq(6)
+    end
+  end
+
+  # having uninitialiazed rails constant errors.
+  # describe 'eligible_page_count' do
+  #   before do
+  #     allow(FrederickAPI.config).to receive(:emails_per_day_limit_enabled).and_return(true)
+  #     allow(FrederickAPI.config).to receive(:emails_per_day_limit).and_return(2000)
+  #     allow(FrederickAPI.config).to receive(:frolodex_batch_fetch_size).and_return(200)
+  #     allow(paginator).to receive(:first_link).and_return('location/some_id/contacts')
+  #     allow(Rails.cache).to receive(read).with('emails_sent_today_some_id').and_return(100)
+  #   end
+
+  #   it 'should return valid page count' do
+  #     expect(paginator.eligible_page_count).to eq(9)
+  #   end
+  # end
 end
