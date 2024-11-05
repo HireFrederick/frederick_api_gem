@@ -82,7 +82,6 @@ module FrederickAPI
           (emails_per_day_limit - emails_sent_today) / batch_size
         rescue => e
           NewRelic::Agent.notice_error(e, first_link: first_link)
-          raise e
         end
 
         def pages_to_be_fetched
