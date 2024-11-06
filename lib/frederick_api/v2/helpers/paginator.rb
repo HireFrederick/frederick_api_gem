@@ -102,6 +102,7 @@ module FrederickAPI
         end
 
         def location_id
+          puts first_link
           first_link.match(%r{locations/([a-f0-9\-]+)/contacts})[1]
         end
       end
