@@ -16,7 +16,11 @@ describe FrederickAPI::V2::Helpers::Paginator do
   let(:links) { { 'first' => 'first_link' } }
   let(:eligible_page_count_val) { 5 }
 
-  before { allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times) }
+  before do
+    allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times)
+    allow(paginator).to receive(:first_link).and_return('location/some_id/contacts')
+  end
+
 
   describe 'superclass' do
     it { expect(described_class.superclass).to eq JsonApiClient::Paginating::Paginator }
@@ -141,6 +145,7 @@ describe FrederickAPI::V2::Helpers::Paginator do
   describe '#first_link' do
     before do
       allow(paginator).to receive(:links).and_return links
+      allow(paginator).to receive(:first_link).and_call_original
     end
 
     it 'returns the first link' do

@@ -21,7 +21,7 @@ module FrederickAPI
 
           page_fetch_count.times do
             first_resource.class.with_headers(first_resource.custom_headers) do
-              retry_block(FrederickAPI.config.retry_times) do
+              retry_block(FrederickAPI.config.retry_times, location_id) do
                 current_result_set = current_result_set ? current_result_set.pages.next : self.result_set.pages.next
                 raise 'next link not found' unless current_result_set
               end
@@ -73,8 +73,6 @@ module FrederickAPI
         def eligible_page_count
           return (total_pages - current_page) unless FrederickAPI.config.emails_per_day_limit_enabled
 
-          url = first_link
-          location_id = url.match(%r{locations/([a-f0-9\-]+)/contacts})[1]
           cache_key = "emails_sent_today_#{location_id}"
           emails_sent_today = Rails.cache.read(cache_key) || 0
           emails_per_day_limit = FrederickAPI.config.emails_per_day_limit
@@ -101,6 +99,10 @@ module FrederickAPI
 
         def first_link
           links['first']
+        end
+
+        def location_id
+          first_link.match(%r{locations/([a-f0-9\-]+)/contacts})[1]
         end
       end
     end
