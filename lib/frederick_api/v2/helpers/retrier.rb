@@ -20,6 +20,8 @@ module FrederickAPI
 
         def nr_log_attempts(attempts, location_id)
           NewRelic::Agent.record_metric('FrolodexPageFetchAttempts', page_count)
+        rescue
+          nil
         end
       end
     end
