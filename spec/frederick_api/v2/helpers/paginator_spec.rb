@@ -19,6 +19,8 @@ describe FrederickAPI::V2::Helpers::Paginator do
   before do
     allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times)
     allow(paginator).to receive(:first_link).and_return('location/some-id/contacts')
+    allow(paginator).to receive(:location_id).and_return('some-id')
+
   end
 
   describe 'superclass' do
