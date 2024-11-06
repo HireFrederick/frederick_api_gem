@@ -13,14 +13,13 @@ describe FrederickAPI::V2::Helpers::Paginator do
     subj
   end
   let(:retry_times) { 3 }
-  let(:links) { { 'first' => 'first_link' } }
+  let(:links) { { 'first' => 'location/some_id/contacts' } }
   let(:eligible_page_count_val) { 5 }
 
   before do
     allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times)
     allow(paginator).to receive(:first_link).and_return('location/some_id/contacts')
   end
-
 
   describe 'superclass' do
     it { expect(described_class.superclass).to eq JsonApiClient::Paginating::Paginator }
