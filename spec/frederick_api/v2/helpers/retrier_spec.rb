@@ -20,7 +20,9 @@ describe FrederickAPI::V2::Helpers::Retrier do
     end
   end
 
-  before { allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times) }
+  before do
+    allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times)
+    allow(FrederickAPI.config).to receive(:emails_per_day_limit_enabled).and_return(false)
 
   describe '#retry_block' do
     before do

@@ -101,6 +101,7 @@ describe FrederickAPI::V2::Helpers::Paginator do
         expect(paginator).to receive(:current_page).with(no_args).and_return(current_page)
         expect(paginator).to receive(:total_pages).with(no_args).and_return(total_pages)
         expect(paginator).to receive(:next).exactly(retry_times).times.with(no_args).and_return(nil)
+        expect(paginator).to receive
       end
 
       it 'raise the next link not found' do
@@ -148,7 +149,7 @@ describe FrederickAPI::V2::Helpers::Paginator do
     end
 
     it 'returns the first link' do
-      expect(paginator.first_link).to eq('first_link')
+      expect(paginator.first_link).to eq('location/some_id/contacts')
     end
   end
 
