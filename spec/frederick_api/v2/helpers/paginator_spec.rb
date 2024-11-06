@@ -13,12 +13,12 @@ describe FrederickAPI::V2::Helpers::Paginator do
     subj
   end
   let(:retry_times) { 3 }
-  let(:links) { { 'first' => 'location/some_id/contacts' } }
+  let(:links) { { 'first' => 'location/some-id/contacts' } }
   let(:eligible_page_count_val) { 5 }
 
   before do
     allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times)
-    allow(paginator).to receive(:first_link).and_return('location/some_id/contacts')
+    allow(paginator).to receive(:first_link).and_return('location/some-id/contacts')
   end
 
   describe 'superclass' do
@@ -149,7 +149,7 @@ describe FrederickAPI::V2::Helpers::Paginator do
     end
 
     it 'returns the first link' do
-      expect(paginator.first_link).to eq('location/some_id/contacts')
+      expect(paginator.first_link).to eq('location/some-id/contacts')
     end
   end
 
@@ -173,8 +173,8 @@ describe FrederickAPI::V2::Helpers::Paginator do
   #     allow(FrederickAPI.config).to receive(:emails_per_day_limit_enabled).and_return(true)
   #     allow(FrederickAPI.config).to receive(:emails_per_day_limit).and_return(2000)
   #     allow(FrederickAPI.config).to receive(:frolodex_batch_fetch_size).and_return(200)
-  #     allow(paginator).to receive(:first_link).and_return('location/some_id/contacts')
-  #     allow(Rails.cache).to receive(read).with('emails_sent_today_some_id').and_return(100)
+  #     allow(paginator).to receive(:first_link).and_return('location/some-id/contacts')
+  #     allow(Rails.cache).to receive(read).with('emails_sent_today_some-id').and_return(100)
   #   end
 
   #   it 'should return valid page count' do
