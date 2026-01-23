@@ -1,4 +1,4 @@
-[ ![Codeship Status for BookerSoftwareInc/frederick_api_gem](https://app.codeship.com/projects/43a5ea40-2b13-0135-7e95-4afd89638027/status?branch=master)](https://app.codeship.com/projects/224007)
+[![CI](https://github.com/BookerSoftwareInc/frederick_api_gem/actions/workflows/ci_steps.yml/badge.svg)](https://github.com/BookerSoftwareInc/frederick_api_gem/actions/workflows/ci_steps.yml)
 
 ```text
  _____             _           _      _         _    ____ ___

@@ -1,8 +1,0 @@
-# Main application where test commands are run
-main:
-  build:
-    image: frederick_api_gem
-    dockerfile: Dockerfile
-  cached: true
-  volumes:
-    - ./:/frederick_api_gem
