@@ -36,8 +36,13 @@ describe FrederickAPI::V2::Helpers::QueryBuilder do
     end
 
     before do
-      allow(query_builder).to receive_messages(filter_params: { filter: { name: 'covfefe' } },
-                                               pagination_params: { page: { number: 2, size: 30 } }, order_params: { sort: 'age' }, includes_params: { includes: 'packages' }, select_params: { fields: { 'billing_contacts' => 'title,body' } })
+      allow(query_builder).to receive_messages(
+                                filter_params: { filter: { name: 'covfefe' } },
+                                pagination_params: { page: { number: 2, size: 30 } },
+                                order_params: { sort: 'age' },
+                                includes_params: { includes: 'packages' },
+                                select_params: { fields: { 'billing_contacts' => 'title,body' } }
+                              )
     end
 
     it 'returns correct hash' do

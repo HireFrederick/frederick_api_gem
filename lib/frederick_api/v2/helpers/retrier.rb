@@ -3,7 +3,7 @@
 module FrederickAPI
   module V2
     module Helpers
-      # Module to add retry logix
+      # Module to add retry logic
       module Retrier
         def retry_block(max_attempts)
           attempts = 1
@@ -14,7 +14,7 @@ module FrederickAPI
             attempts += 1
             raise unless attempts <= max_attempts
 
-            sleep(attempts * 5)
+            sleep((attempts - 1) * 5)
             retry
           end
         end

@@ -490,7 +490,7 @@ describe FrederickAPI::V2::Resource, :integration do
             .to_return(background_resource_complete_response)
         end
 
-        it 'returns the BackgoundJob resource' do
+        it 'returns the BackgroundJob resource' do
           expect(resource.where(location_id: location_id).all.first)
               .to be_a(FrederickAPI::V2::BackgroundJob)
         end
