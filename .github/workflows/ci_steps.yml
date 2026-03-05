@@ -7,7 +7,7 @@
 name: "Frederick API Gem CI"
 on:
   push:
-    branches: [master] 
+    branches: [master]
   pull_request:
 
 concurrency:
@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RUBY_VERSION: 2.4.3
+  RUBY_VERSION: 3.3.10
   DOCKER: true
   RAILS_ENV: test
 

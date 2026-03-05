@@ -8,7 +8,7 @@ module FrederickAPI
         attr_reader :errors
 
         # Initialize with a JsonApiClient::ResultSet or a Resource
-        def initialize(result)
+        def initialize(result) # rubocop:disable Lint/MissingSuper
           # @env is used in base class JsonApiClient::Errors::Error
           @env = result
           @errors = result.errors || []
@@ -16,6 +16,7 @@ module FrederickAPI
 
         def to_s
           return "Client Error: #{self.errors.first['detail']}" if self.errors.any?
+
           super
         end
       end

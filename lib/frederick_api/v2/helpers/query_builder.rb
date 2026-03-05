@@ -65,15 +65,15 @@ module FrederickAPI
 
           def _new_scope(opts = {})
             self.class.new(@klass,
-                           requestor:         requestor,
-                           primary_key:       opts.fetch(:primary_key, @primary_key),
+                           requestor: requestor,
+                           primary_key: opts.fetch(:primary_key, @primary_key),
                            pagination_params: @pagination_params.merge(opts.fetch(:pagination_params, {})),
-                           path_params:       @path_params.merge(opts.fetch(:path_params, {})),
+                           path_params: @path_params.merge(opts.fetch(:path_params, {})),
                            additional_params: @additional_params.merge(opts.fetch(:additional_params, {})),
-                           filters:           @filters.merge(opts.fetch(:filters, {})),
-                           includes:          @includes + opts.fetch(:includes, []),
-                           orders:            @orders + opts.fetch(:orders, []),
-                           fields:            @fields + opts.fetch(:fields, []))
+                           filters: @filters.merge(opts.fetch(:filters, {})),
+                           includes: @includes + opts.fetch(:includes, []),
+                           orders: @orders + opts.fetch(:orders, []),
+                           fields: @fields + opts.fetch(:fields, []))
           end
       end
     end

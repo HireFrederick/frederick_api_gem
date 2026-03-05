@@ -36,11 +36,8 @@ describe FrederickAPI::V2::Helpers::QueryBuilder do
     end
 
     before do
-      allow(query_builder).to receive(:filter_params).and_return(filter: { name: 'covfefe' })
-      allow(query_builder).to receive(:pagination_params).and_return(page: { number: 2, size: 30 })
-      allow(query_builder).to receive(:order_params).and_return(sort: 'age')
-      allow(query_builder).to receive(:includes_params).and_return(includes: 'packages')
-      allow(query_builder).to receive(:select_params).and_return(fields: { 'billing_contacts' => 'title,body' })
+      allow(query_builder).to receive_messages(filter_params: { filter: { name: 'covfefe' } },
+                                               pagination_params: { page: { number: 2, size: 30 } }, order_params: { sort: 'age' }, includes_params: { includes: 'packages' }, select_params: { fields: { 'billing_contacts' => 'title,body' } })
     end
 
     it 'returns correct hash' do

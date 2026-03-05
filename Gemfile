@@ -6,11 +6,11 @@ gemspec
 
 group :development, :test do
   gem 'bundler'
-  gem 'byebug'
+  gem 'debug'
   gem 'rake'
   gem 'rspec'
-  gem 'rubocop', '0.49.1', require: false
-  gem 'rubocop-rspec', '1.15.1', require: false
+  gem 'rubocop', require: false
+  gem 'rubocop-rspec', require: false
   gem 'webmock'
   gem 'yard'
 end

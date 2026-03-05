@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'cgi'
+
 module FrederickAPI
   module V2
     module Helpers
@@ -21,12 +23,12 @@ module FrederickAPI
         # Paths that may have an unbounded query param length so we should always use a POST
         # instead of a GET to get around AWS Cloudfront limitations
         GET_VIA_POST_PATHS = [
-          %r{^.*locations\/[^\/]+\/contacts$},
-          %r{^.*locations\/[^\/]+\/interactions$}
+          %r{^.*locations/[^/]+/contacts$},
+          %r{^.*locations/[^/]+/interactions$}
         ].map(&:freeze).freeze
 
         def initialize(klass, path = nil)
-          @klass = klass
+          super(klass)
           @path = path
         end
 
@@ -68,8 +70,9 @@ module FrederickAPI
 
           begin
             make_request.call
-          rescue JsonApiClient::Errors::ConnectionError, JsonApiClient::Errors::ServerError => ex
-            raise ex if ex.is_a?(JsonApiClient::Errors::NotFound) || ex.is_a?(JsonApiClient::Errors::Conflict)
+          rescue JsonApiClient::Errors::ConnectionError, JsonApiClient::Errors::ServerError => e
+            raise e if e.is_a?(JsonApiClient::Errors::NotFound) || e.is_a?(JsonApiClient::Errors::Conflict)
+
             make_request.call
           end
         end
@@ -79,12 +82,14 @@ module FrederickAPI
             return response unless
                 (job = response&.first).is_a?(::FrederickAPI::V2::BackgroundJob) && job.status != 'complete'
             raise FrederickAPI::V2::Errors::BackgroundJobFailure, job if job.has_errors?
+
             sleep job.retry_after
             linked(job.links.attributes['self'])
           end
 
           def handle_errors(result)
             return result unless result.has_errors?
+
             error_klass = FrederickAPI::V2::Errors::ERROR_CODES[result.errors.first[:status]] ||
               FrederickAPI::V2::Errors::Error
             raise error_klass, result
