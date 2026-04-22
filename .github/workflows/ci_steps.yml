@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  RUBY_VERSION: 3.3.10
+  RUBY_VERSION: 3.2.2
   DOCKER: true
   RAILS_ENV: test
 

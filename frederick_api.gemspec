@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.version       = FrederickAPI::VERSION
   spec.authors       = ['Frederick Engineering']
   spec.email         = ['tech@hirefrederick.com']
-  spec.required_ruby_version = '>= 3.3.10'
+  spec.required_ruby_version = '>= 3.2.2'
 
   spec.summary       = 'Frederick API Client'
   spec.description   = 'Ruby client for the Frederick API'
