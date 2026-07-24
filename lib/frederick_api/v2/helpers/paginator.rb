@@ -58,6 +58,8 @@ module FrederickAPI
           uri = result_set.links.link_url_for('first')
           first_params = params_for_uri(uri)
           filter_string = first_params.fetch('filter.filters')
+          return false if filter_string.blank?
+
           filters_array = JSON.parse(filter_string).flatten
           filters_array.each do |filter_hash|
             if filter_hash['operator'] == 'has_no_interaction' &&
