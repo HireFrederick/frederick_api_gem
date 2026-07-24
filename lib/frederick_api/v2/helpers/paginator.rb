@@ -57,7 +57,8 @@ module FrederickAPI
         def is_campaign_source?
           uri = result_set.links.link_url_for('first')
           first_params = params_for_uri(uri)
-          filter_string = first_params.fetch('filter.filters')
+          Rails.logger.warn("First params: #{first_params}")
+          filter_string = first_params.fetch('filter.filters', nil)
           return false if filter_string.blank?
 
           filters_array = JSON.parse(filter_string).flatten
