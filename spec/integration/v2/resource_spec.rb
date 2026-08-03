@@ -454,38 +454,45 @@ describe FrederickAPI::V2::Resource, :integration do
             .to have_requested(:get, background_resource_url)
             .at_least_times(2)
         end
+
         it 'respects the retry-after header' do
           expect_any_instance_of(FrederickAPI::V2::Helpers::Requestor).to receive(:sleep).exactly(3).times
           resource.where(location_id: location_id).all
         end
+
         it 'follows 303' do
           expect(resource.where(location_id: location_id).all)
               .to have_requested(:get, real_payload_url)
         end
+
         it 'returns completed resource' do
           expect(resource.where(location_id: location_id).all.first.attributes['foo'])
               .to eq('bar')
         end
       end
+
       context 'when errors happen' do
         before do
           stub_request(:post, long_job_url)
               .to_return(background_resource_error_response)
         end
+
         it 'raises a BackgroundJobFailure exception' do
           expect do
             resource.where(location_id: location_id).all
           end.to raise_error(FrederickAPI::V2::Errors::BackgroundJobFailure)
         end
       end
+
       context 'when complete, with no response' do
         before do
           stub_request(:post, long_job_url)
             .to_return(background_resource_complete_response)
         end
-        it 'returns the BackgoundJob resource' do
+
+        it 'returns the BackgroundJob resource' do
           expect(resource.where(location_id: location_id).all.first)
-              .to be_kind_of(FrederickAPI::V2::BackgroundJob)
+              .to be_a(FrederickAPI::V2::BackgroundJob)
         end
       end
     end

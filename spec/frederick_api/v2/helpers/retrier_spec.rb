@@ -24,8 +24,8 @@ describe FrederickAPI::V2::Helpers::Retrier do
 
   describe '#retry_block' do
     before do
-      allow(dummy_class_instance).to receive(:retry_block).with(retry_times, &test_block).and_call_original
       allow(dummy_class_instance).to receive(:dummy_method).and_call_original
+      allow(dummy_class_instance).to receive(:sleep)
     end
 
     it 'expects to raise error after 3 retries' do

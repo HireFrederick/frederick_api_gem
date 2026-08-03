@@ -55,9 +55,14 @@ module FrederickAPI
         end
 
         def is_campaign_source?
+          return false unless result_set.links.respond_to?(:link_url_for)
+
           uri = result_set.links.link_url_for('first')
           first_params = params_for_uri(uri)
-          filter_string = first_params.fetch('filter.filters')
+          Rails.logger.warn("First params: #{first_params}")
+          filter_string = first_params.fetch('filter.filters', nil)
+          return false if filter_string.blank?
+
           filters_array = JSON.parse(filter_string).flatten
           filters_array.each do |filter_hash|
             if filter_hash['operator'] == 'has_no_interaction' &&
@@ -71,17 +76,18 @@ module FrederickAPI
         end
 
         def eligible_page_count
-          return (total_pages - current_page) unless FrederickAPI.config.emails_per_day_limit_enabled
+          return total_pages - current_page unless FrederickAPI.config.emails_per_day_limit_enabled
 
           url = first_link
-          location_id = url.match(%r{locations/([a-f0-9\-]+)/contacts})[1]
+          location_id = url.match(%r{locations/([a-f0-9-]+)/contacts})[1]
           cache_key = "emails_sent_today_#{location_id}"
           emails_sent_today = Rails.cache.read(cache_key) || 0
           emails_per_day_limit = FrederickAPI.config.emails_per_day_limit
           batch_size = FrederickAPI.config.frolodex_batch_fetch_size || 1000
           (emails_per_day_limit - emails_sent_today) / batch_size
-        rescue => e
+        rescue StandardError => e
           NewRelic::Agent.notice_error(e, first_link: first_link)
+          0
         end
 
         def pages_to_be_fetched
@@ -95,7 +101,7 @@ module FrederickAPI
         # log pages fetched for further analysis.
         def nr_log_page_count(page_count)
           NewRelic::Agent.record_metric('FrolodexPageFetchCount', page_count)
-        rescue
+        rescue StandardError
           nil
         end
 

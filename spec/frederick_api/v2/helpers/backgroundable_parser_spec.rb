@@ -17,10 +17,7 @@ describe FrederickAPI::V2::Helpers::BackgroundableParser do
 
   describe '#parse' do
     before do
-      allow(response).to receive(:status).and_return(status)
-      allow(response).to receive(:headers).and_return(headers)
-      allow(response).to receive(:body).and_return(body)
-      allow(response).to receive(:env).and_return({})
+      allow(response).to receive_messages(status: status, headers: headers, body: body, env: {})
     end
 
     context 'when a non-background job response is received' do

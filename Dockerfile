@@ -1,4 +1,4 @@
-FROM ruby:2.7.0
+FROM ruby:3.3.10
 
 WORKDIR /frederick_api_gem
 ADD Gemfile /frederick_api_gem

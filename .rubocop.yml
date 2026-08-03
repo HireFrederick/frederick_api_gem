@@ -3,11 +3,13 @@
 # Enable rubocop todos to go through them one by one
 # For how to get started with rubocop, see: https://buildtoship.com/integrate-rubocop-in-your-workflow/
 
-require:
+plugins:
   - rubocop-rspec
 
 AllCops:
-  TargetRubyVersion: 2.3
+  NewCops: disable
+  SuggestExtensions: false
+  TargetRubyVersion: 3.3.10
   # Cop names are not displayed in offense messages by default. Change behavior
   # by overriding DisplayCopNames, or by giving the -D/--display-cop-names
   # option.
@@ -42,15 +44,17 @@ RSpec/NestedGroups:
 Metrics/MethodLength:
   Max: 20
 
-Metrics/LineLength:
+Layout/LineLength:
   Max: 120
+  Exclude:
+    - 'spec/**/*'
 
 Layout/MultilineMethodCallIndentation:
   Exclude:
     - 'spec/**/*'
 
 # Checks the indentation of the first element in an array literal.
-Layout/IndentArray:
+Layout/FirstArrayElementIndentation:
   Enabled: false
 
 # Cop supports --auto-correct.
@@ -65,13 +69,7 @@ Layout/MultilineOperationIndentation:
   EnforcedStyle: indented
 
 Layout/IndentationConsistency:
-  # The difference between `rails` and `normal` is that the `rails` style
-  # prescribes that in classes and modules the `protected` and `private`
-  # modifier keywords shall be indented the same as public methods and that
-  # protected and private members shall be indented one step more than the
-  # modifiers. Other than that, both styles mean that entities on the same
-  # logical depth shall have the same indentation.
-  EnforcedStyle: rails
+  EnforcedStyle: indented_internal_methods
 
 # Document classes and non-namespace modules.
 Style/Documentation:
@@ -82,10 +80,6 @@ Style/Documentation:
 
 # Cop supports --auto-correct.
 # Configuration parameters: AllowUnusedKeywordArguments, IgnoreEmptyMethods.
-Lint/UnusedMethodArgument:
-  Exclude:
-    - 'config/initializers/sidekiq.rb'
-
 Layout/EmptyLinesAroundAccessModifier:
   Enabled: false
 
@@ -102,17 +96,13 @@ Style/ClassAndModuleChildren:
 RSpec/AnyInstance:
   Enabled: false
 
-# Configuration parameters: Max.
-RSpec/ExampleLength:
-  Max: 10
-
-Style/PredicateName:
+Naming/PredicatePrefix:
   Enabled: false
 
 
 ################################## EXCLUDED ##################################
 
-Style/AccessorMethodName:
+Naming/AccessorMethodName:
   Exclude:
     - 'app/controllers/api/v1/api_controller.rb'
 
@@ -129,40 +119,93 @@ RSpec/DescribeClass:
   Exclude:
     - 'spec/lib/tasks/**/*'
     - 'spec/integration/*.rb'
+
 RSpec/DescribedClass:
   Exclude:
     - '**/*'
-Style/TrailingCommaInLiteral:
+
+Style/TrailingCommaInArrayLiteral:
   Exclude:
     - 'spec/**/*'
     - 'app/**/*'
     - '**/*'
+
+Style/TrailingCommaInHashLiteral:
+  Exclude:
+    - 'spec/**/*'
+    - 'app/**/*'
+    - '**/*'
+
 Style/TrailingCommaInArguments:
   Exclude:
     - 'spec/**/*'
     - 'app/**/*'
     - '**/*'
+
 Style/FrozenStringLiteralComment:
   Exclude:
     - 'app/views/*'
+
 RSpec/MessageExpectation:
   Exclude:
     - 'spec/**/*'
-RSpec/FilePath:
+
+RSpec/SpecFilePathFormat:
   Exclude:
     - 'spec/**/*'
+
+RSpec/SpecFilePathSuffix:
+  Exclude:
+    - 'spec/**/*'
+
 RSpec/MultipleExpectations:
   Exclude:
     - 'spec/**/*'
+
 RSpec/ExampleLength:
   Exclude:
     - 'spec/**/*'
     - '**/*'
+
 Metrics/ModuleLength:
   Exclude:
     - '**/*'
+
 Metrics/BlockLength:
   Exclude:
     - 'spec/**/*'
+
 RSpec/MessageSpies:
   Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+
+RSpec/ContextWording:
+  Enabled: false
+
+RSpec/ExpectInHook:
+  Enabled: false
+
+RSpec/StubbedMock:
+  Enabled: false
+
+RSpec/RepeatedExampleGroupBody:
+  Enabled: false
+
+RSpec/RepeatedExampleGroupDescription:
+  Enabled: false
+
+Lint/ConstantDefinitionInBlock:
+  Exclude:
+    - 'spec/**/*'
+
+RSpec/IndexedLet:
+  Enabled: false
+
+RSpec/IdenticalEqualityAssertion:
+  Enabled: false
+
+Naming/VariableNumber:
+  Exclude:
+    - 'spec/**/*'
