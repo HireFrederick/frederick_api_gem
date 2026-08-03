@@ -55,6 +55,8 @@ module FrederickAPI
         end
 
         def is_campaign_source?
+          return false unless result_set.links.respond_to?(:link_url_for)
+
           uri = result_set.links.link_url_for('first')
           first_params = params_for_uri(uri)
           Rails.logger.warn("First params: #{first_params}")
