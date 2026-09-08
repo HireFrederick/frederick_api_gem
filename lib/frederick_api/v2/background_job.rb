@@ -24,8 +24,15 @@ module FrederickAPI
         @attributes['status']
       end
 
+      # frolodex fills a failed job's `messages` with plain strings (the exception text).
+      # Errors::Error#to_s reads ['detail'] from the first error, which is nil on a String and
+      # produced the empty "Client Error: " message (AB#1284255). Wrap strings as JSON:API-style
+      # error hashes so the real reason survives; keep the copied text bounded because it can be
+      # long (for example a SQL statement).
       def errors
-        @attributes['messages']
+        messages = @attributes['messages']
+        messages = [messages].compact unless messages.is_a?(Array)
+        messages.map { |message| message.is_a?(Hash) ? message : { 'detail' => message.to_s[0, 1000] } }
       end
 
       def id

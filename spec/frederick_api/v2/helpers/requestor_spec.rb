@@ -239,6 +239,16 @@ describe FrederickAPI::V2::Helpers::Requestor do
         end
       end
 
+      context 'a real background job that frolodex marked as failed' do
+        let(:record) { ::FrederickAPI::V2::BackgroundJob.new(status: 'error', messages: ['stack level too deep']) }
+        let(:result) { [record] }
+
+        it 'raises a BackgroundJobFailure that names the reason' do
+          expect { requestor.send(:handle_background, result) }
+            .to raise_error(FrederickAPI::V2::Errors::BackgroundJobFailure, 'Client Error: stack level too deep')
+        end
+      end
+
       context 'incomplete background job' do
         let(:links) { instance_double(JsonApiClient::Linking::Links, attributes: { 'self' => 'thisismyself' }) }
         let(:record) do
