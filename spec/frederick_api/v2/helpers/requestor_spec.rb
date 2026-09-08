@@ -216,6 +216,46 @@ describe FrederickAPI::V2::Helpers::Requestor do
                                  .with(type, path, params: params, headers: request_headers, body: nil).once
         end
       end
+
+      context 'FrederickAPI::V2::Errors::RateLimited' do
+        let(:env) { OpenStruct.new(status: 429, url: 'http://test.host/foo') }
+        let(:error) { FrederickAPI::V2::Errors::RateLimited.new(env) }
+
+        before { allow(requestor).to receive(:sleep) }
+
+        it 'waits the default delay, makes request twice, is still successful' do
+          expect(requestor.send(:request, type, path, params: params)).to eq request_return
+          expect(requestor).to have_received(:sleep).with(described_class::RATE_LIMIT_RETRY_DELAY)
+          expect(requestor).to have_received(:make_request)
+                                 .with(type, path, params: params, headers: request_headers, body: nil).twice
+        end
+
+        context 'with a Retry-After header' do
+          let(:env) do
+            OpenStruct.new(status: 429, url: 'http://test.host/foo', response_headers: { 'Retry-After' => '3' })
+          end
+
+          it 'waits for the seconds the server asked for' do
+            expect(requestor.send(:request, type, path, params: params)).to eq request_return
+            expect(requestor).to have_received(:sleep).with(3)
+          end
+        end
+      end
+    end
+
+    context 'rate limited on every attempt' do
+      let(:error) { FrederickAPI::V2::Errors::RateLimited.new(OpenStruct.new(status: 429, url: 'u')) }
+
+      before do
+        allow(requestor).to receive(:sleep)
+        allow(requestor).to receive(:make_request).and_raise(error)
+      end
+
+      it 'makes request twice, then raises RateLimited instead of returning an empty result' do
+        expect { requestor.send(:request, type, path, params: params) }.to raise_error error
+        expect(requestor).to have_received(:make_request)
+                               .with(type, path, params: params, headers: request_headers, body: nil).twice
+      end
     end
   end
 
@@ -419,6 +459,71 @@ describe FrederickAPI::V2::Helpers::Requestor do
         expect(requestor.connection).to have_received(:run)
                                           .with(type, path, params: params, headers: headers, body: body)
         expect(requestor).to have_received(:linked).with(response.headers['location'])
+      end
+    end
+
+    context 'client error response' do
+      let(:env) { OpenStruct.new(status: status, url: 'http://test.host/foo', body: env_body, response: response) }
+      let(:client_error) { JsonApiClient::Errors::ClientError.new(env) }
+      let(:env_body) { { 'message' => 'Too Many Requests' } }
+
+      before { allow(requestor.connection).to receive(:run).and_raise(client_error) }
+
+      context '429 Too Many Requests' do
+        let(:status) { 429 }
+
+        it 'raises RateLimited instead of parsing the body as an empty result' do
+          expect do
+            requestor.send(:make_request, type, path, params: params, headers: headers, body: body)
+          end.to raise_error(FrederickAPI::V2::Errors::RateLimited, /429 Too Many Requests/)
+          expect(resource.parser).not_to have_received(:parse)
+        end
+      end
+
+      context '4xx without a JSON:API error document' do
+        let(:status) { 400 }
+
+        it 're-raises the client error' do
+          expect do
+            requestor.send(:make_request, type, path, params: params, headers: headers, body: body)
+          end.to raise_error client_error
+          expect(resource.parser).not_to have_received(:parse)
+        end
+      end
+
+      context '4xx with a JSON:API error document' do
+        let(:status) { 400 }
+        let(:env_body) { { 'errors' => [{ 'status' => '400', 'title' => 'Bad Request' }] } }
+
+        it 'parses the error document so handle_errors can map it' do
+          expect(requestor.send(:make_request, type, path, params: params, headers: headers, body: body)).to be(
+            expected_result
+          )
+          expect(resource.parser).to have_received(:parse).with(resource, response)
+        end
+      end
+
+      context 'pass-through client error' do
+        let(:status) { 401 }
+        let(:client_error) { JsonApiClient::Errors::NotAuthorized.new(env) }
+
+        it 're-raises it untouched' do
+          expect do
+            requestor.send(:make_request, type, path, params: params, headers: headers, body: body)
+          end.to raise_error client_error
+        end
+      end
+
+      context 'error already mapped by handle_errors (e.g. from a linked request)' do
+        let(:status) { 400 }
+        let(:mapped_result) { instance_double(JsonApiClient::ResultSet, errors: []) }
+        let(:client_error) { FrederickAPI::V2::Errors::BadRequest.new(mapped_result) }
+
+        it 're-raises it untouched' do
+          expect do
+            requestor.send(:make_request, type, path, params: params, headers: headers, body: body)
+          end.to raise_error client_error
+        end
       end
     end
   end

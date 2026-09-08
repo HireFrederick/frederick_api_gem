@@ -33,7 +33,10 @@ module FrederickAPI
         # rubocop:enable Metrics/AbcSize
 
         def total_pages
-          if links['last']
+          page_links = links
+          raise 'response has no top-level links (not a paginated JSON:API document)' if page_links.nil?
+
+          if page_links['last']
             uri = result_set.links.link_url_for('last')
             last_params = params_for_uri(uri)
             last_params.fetch("page.#{page_param}") do

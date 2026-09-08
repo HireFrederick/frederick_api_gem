@@ -25,6 +25,10 @@ module FrederickAPI
           %r{^.*locations\/[^\/]+\/interactions$}
         ].map(&:freeze).freeze
 
+        # Seconds to wait before the single retry of a rate-limited (HTTP 429) request when the
+        # response carries no Retry-After header
+        RATE_LIMIT_RETRY_DELAY = 1
+
         def initialize(klass, path = nil)
           @klass = klass
           @path = path
@@ -59,22 +63,27 @@ module FrederickAPI
           request(:post, path_without_params, body: params.to_json, additional_headers: { 'X-Request-Method' => 'GET' })
         end
 
-        # Retry once on unhandled server errors
+        # Retry once on unhandled server errors and on rate limiting (HTTP 429)
         def request(type, path, params: nil, body: nil, additional_headers: {})
           headers = klass.custom_headers.merge(additional_headers)
           make_request = proc do
             handle_background(handle_errors(make_request(type, path, params: params, body: body, headers: headers)))
           end
 
-          begin
+          with_one_retry(make_request)
+        end
+
+        private
+          def with_one_retry(make_request)
             make_request.call
           rescue JsonApiClient::Errors::ConnectionError, JsonApiClient::Errors::ServerError => ex
             raise ex if ex.is_a?(JsonApiClient::Errors::NotFound) || ex.is_a?(JsonApiClient::Errors::Conflict)
             make_request.call
+          rescue FrederickAPI::V2::Errors::RateLimited => ex
+            sleep(ex.retry_after || RATE_LIMIT_RETRY_DELAY)
+            make_request.call
           end
-        end
 
-        private
           def handle_background(response)
             return response unless
                 (job = response&.first).is_a?(::FrederickAPI::V2::BackgroundJob) && job.status != 'complete'
@@ -105,8 +114,24 @@ module FrederickAPI
 
           def handle_json_api_client_error(error)
             raise error if JSON_API_CLIENT_PASSTHROUGH_ERRORS.include?(error.class)
+            # Errors we raised ourselves (e.g. from handle_errors inside a linked request) are final
+            raise error if error.is_a?(FrederickAPI::V2::Errors::Error)
+            raise FrederickAPI::V2::Errors::RateLimited, error.env if rate_limited?(error)
+            # Only a JSON:API error document can be turned into resource errors. Anything else (for
+            # example API Gateway's 429/4xx JSON) has no data/meta/links and would otherwise be
+            # handed back as an empty, successful-looking result set (AB#1293078).
+            raise error unless json_api_error_document?(error.env)
 
             klass.parser.parse(klass, error.env.response)
+          end
+
+          def rate_limited?(error)
+            error.env.respond_to?(:status) && error.env.status == 429
+          end
+
+          def json_api_error_document?(env)
+            body = env[:body]
+            body.is_a?(Hash) && body['errors'].is_a?(Array) && body['errors'].any?
           end
       end
     end
