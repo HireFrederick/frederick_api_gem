@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'time'
+
 module FrederickAPI
   module V2
     module Errors
@@ -34,11 +36,17 @@ module FrederickAPI
           super(env, msg || "429 Too Many Requests: #{env[:url]}")
         end
 
-        # Seconds the server asked us to wait (Retry-After header, delay-seconds form), else nil
+        # Seconds the server asked us to wait: Retry-After as delay-seconds or as an HTTP-date
+        # (RFC 7231 section 7.1.3), never negative; nil when the header is missing or unparseable
         def retry_after
           headers = env[:response_headers]
-          value = headers && headers['Retry-After']
-          value.to_s =~ /\A\d+\z/ ? value.to_i : nil
+          value = headers && headers['Retry-After'].to_s.strip
+          return nil if value.nil? || value.empty?
+          return value.to_i if value =~ /\A\d+\z/
+
+          [(Time.httpdate(value) - Time.now).ceil, 0].max
+        rescue ArgumentError
+          nil
         end
       end
 

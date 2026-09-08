@@ -77,8 +77,28 @@ module FrederickAPI::V2::Errors
         it { expect(error.retry_after).to eq 7 }
       end
 
-      context 'Retry-After as an HTTP date' do
-        let(:headers) { { 'Retry-After' => 'Wed, 21 Oct 2026 07:28:00 GMT' } }
+      context 'Retry-After as an HTTP date in the future' do
+        let(:headers) { { 'Retry-After' => (Time.now + 30).httpdate } }
+
+        it 'returns the whole seconds until that time' do
+          expect(error.retry_after).to be_between(28, 30)
+        end
+      end
+
+      context 'Retry-After as an HTTP date in the past' do
+        let(:headers) { { 'Retry-After' => 'Wed, 21 Oct 2015 07:28:00 GMT' } }
+
+        it { expect(error.retry_after).to eq 0 }
+      end
+
+      context 'Retry-After that is neither seconds nor a date' do
+        let(:headers) { { 'Retry-After' => 'soon' } }
+
+        it { expect(error.retry_after).to be_nil }
+      end
+
+      context 'blank Retry-After' do
+        let(:headers) { { 'Retry-After' => ' ' } }
 
         it { expect(error.retry_after).to be_nil }
       end
