@@ -27,7 +27,7 @@ module FrederickAPI
 
         # Seconds to wait before the single retry of a rate-limited (HTTP 429) request when the
         # response carries no Retry-After header
-        RATE_LIMIT_RETRY_DELAY = 1
+        RATE_LIMIT_RETRY_DELAY_SECONDS = 1
 
         def initialize(klass, path = nil)
           @klass = klass
@@ -80,7 +80,7 @@ module FrederickAPI
             raise ex if ex.is_a?(JsonApiClient::Errors::NotFound) || ex.is_a?(JsonApiClient::Errors::Conflict)
             make_request.call
           rescue FrederickAPI::V2::Errors::RateLimited => ex
-            sleep(ex.retry_after || RATE_LIMIT_RETRY_DELAY)
+            sleep(ex.retry_after || RATE_LIMIT_RETRY_DELAY_SECONDS)
             make_request.call
           end
 
@@ -120,18 +120,17 @@ module FrederickAPI
             # Only a JSON:API error document can be turned into resource errors. Anything else (for
             # example API Gateway's 429/4xx JSON) has no data/meta/links and would otherwise be
             # handed back as an empty, successful-looking result set (AB#1293078).
-            raise error unless json_api_error_document?(error.env)
+            raise error unless json_api_errors(error.env).any?
 
             klass.parser.parse(klass, error.env.response)
           end
 
           def rate_limited?(error)
-            error.env.respond_to?(:status) && error.env.status == 429
+            error.env.status == 429
           end
 
-          def json_api_error_document?(env)
-            body = env[:body]
-            body.is_a?(Hash) && body['errors'].is_a?(Array) && body['errors'].any?
+          def json_api_errors(env)
+            (env[:body] || {})['errors'] || []
           end
       end
     end

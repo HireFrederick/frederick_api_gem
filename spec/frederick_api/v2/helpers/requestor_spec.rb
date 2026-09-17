@@ -225,7 +225,7 @@ describe FrederickAPI::V2::Helpers::Requestor do
 
         it 'waits the default delay, makes request twice, is still successful' do
           expect(requestor.send(:request, type, path, params: params)).to eq request_return
-          expect(requestor).to have_received(:sleep).with(described_class::RATE_LIMIT_RETRY_DELAY)
+          expect(requestor).to have_received(:sleep).with(described_class::RATE_LIMIT_RETRY_DELAY_SECONDS)
           expect(requestor).to have_received(:make_request)
                                  .with(type, path, params: params, headers: request_headers, body: nil).twice
         end
