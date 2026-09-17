@@ -51,4 +51,57 @@ module FrederickAPI::V2::Errors
 
     it { is_expected.to be_a(Error) }
   end
+
+  describe RateLimited do
+    let(:headers) { {} }
+    let(:env) { OpenStruct.new(status: 429, url: 'http://test.host/foo', response_headers: headers) }
+    let(:error) { described_class.new(env) }
+
+    it 'is a JsonApiClient client error' do
+      expect(described_class.superclass).to eq JsonApiClient::Errors::ClientError
+    end
+
+    it 'names the status and the url' do
+      expect(error.message).to eq '429 Too Many Requests: http://test.host/foo'
+      expect(error.env).to be env
+    end
+
+    describe '#retry_after' do
+      context 'no Retry-After header' do
+        it { expect(error.retry_after).to be_nil }
+      end
+
+      context 'Retry-After in seconds' do
+        let(:headers) { { 'Retry-After' => '7' } }
+
+        it { expect(error.retry_after).to eq 7 }
+      end
+
+      context 'Retry-After as an HTTP date in the future' do
+        let(:headers) { { 'Retry-After' => (Time.now + 30).httpdate } }
+
+        it 'returns the whole seconds until that time' do
+          expect(error.retry_after).to be_between(28, 30)
+        end
+      end
+
+      context 'Retry-After as an HTTP date in the past' do
+        let(:headers) { { 'Retry-After' => 'Wed, 21 Oct 2015 07:28:00 GMT' } }
+
+        it { expect(error.retry_after).to eq 0 }
+      end
+
+      context 'Retry-After that is neither seconds nor a date' do
+        let(:headers) { { 'Retry-After' => 'soon' } }
+
+        it { expect(error.retry_after).to be_nil }
+      end
+
+      context 'blank Retry-After' do
+        let(:headers) { { 'Retry-After' => ' ' } }
+
+        it { expect(error.retry_after).to be_nil }
+      end
+    end
+  end
 end

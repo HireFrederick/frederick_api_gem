@@ -39,6 +39,14 @@ describe FrederickAPI::V2::Helpers::Paginator do
         expect(paginator.total_pages).to eq 1
       end
     end
+
+    context 'no links section at all (response was not a paginated JSON:API document)' do
+      let(:links) { nil }
+
+      it 'raises a readable error instead of NoMethodError on nil' do
+        expect { paginator.total_pages }.to raise_error(RuntimeError, /no top-level links/)
+      end
+    end
   end
 
   describe '#per_page' do

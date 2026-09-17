@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'time'
+
 module FrederickAPI
   module V2
     module Errors
@@ -26,6 +28,27 @@ module FrederickAPI
       # an exception class for when the server reports that a
       # long running job has failed.
       class BackgroundJobFailure < Error; end
+
+      # Raised when the API, or the gateway in front of it, answers HTTP 429 Too Many Requests.
+      # Not an Errors::Error: a 429 carries no JSON:API error document, only the Faraday env.
+      class RateLimited < JsonApiClient::Errors::ClientError
+        def initialize(env, msg = nil)
+          super(env, msg || "429 Too Many Requests: #{env[:url]}")
+        end
+
+        # Seconds the server asked us to wait: Retry-After as delay-seconds or as an HTTP-date
+        # (RFC 7231 section 7.1.3), never negative; nil when the header is missing or unparseable
+        def retry_after
+          headers = env[:response_headers]
+          value = headers && headers['Retry-After'].to_s.strip
+          return nil if value.nil? || value.empty?
+          return value.to_i if value =~ /\A\d+\z/
+
+          [(Time.httpdate(value) - Time.now).ceil, 0].max
+        rescue ArgumentError
+          nil
+        end
+      end
 
       ERROR_CODES = {
         '400' => BadRequest,
