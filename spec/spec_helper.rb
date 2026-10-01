@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
-require 'byebug'
+require 'debug'
+require 'ostruct'
 require 'webmock/rspec'
 require 'frederick_api'
 require 'support/v2_resource_shared_examples'

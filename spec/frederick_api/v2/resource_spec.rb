@@ -34,12 +34,15 @@ describe FrederickAPI::V2::Resource do
     it 'responds to #create' do
       expect(subclass).to respond_to('create')
     end
+
     it 'responds to #find' do
       expect(subclass).to respond_to('find')
     end
+
     it 'responds to #all' do
       expect(subclass).to respond_to('all')
     end
+
     it 'responds to #where' do
       expect(subclass).to respond_to('where')
     end

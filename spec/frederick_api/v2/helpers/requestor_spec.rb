@@ -49,8 +49,7 @@ describe FrederickAPI::V2::Helpers::Requestor do
     let(:response) { 'resp' }
 
     before do
-      allow(requestor).to receive(:resource_path).and_return path
-      allow(requestor).to receive(:request).and_return response
+      allow(requestor).to receive_messages(resource_path: path, request: response)
     end
 
     it 'gets response' do
@@ -249,13 +248,12 @@ describe FrederickAPI::V2::Helpers::Requestor do
           allow(record).to receive(:links).and_return(links)
           allow(requestor).to receive(:sleep).with(record.retry_after)
           allow(record).to receive(:is_a?)
-          allow(record).to receive(:is_a?).with(::FrederickAPI::V2::BackgroundJob) { true }
+          allow(record).to receive(:is_a?).with(::FrederickAPI::V2::BackgroundJob).and_return(true)
         end
 
         context 'with errors' do
           before do
-            allow(record).to receive(:status).and_return('error')
-            allow(record).to receive(:has_errors?).and_return(true)
+            allow(record).to receive_messages(status: 'error', has_errors?: true)
           end
 
           it 'raises a BackgroundJobFailure error' do
@@ -268,8 +266,7 @@ describe FrederickAPI::V2::Helpers::Requestor do
 
         context 'with no errors' do
           before do
-            allow(record).to receive(:status).and_return('queued')
-            allow(record).to receive(:has_errors?).and_return(false)
+            allow(record).to receive_messages(status: 'queued', has_errors?: false)
             allow(requestor).to receive(:linked)
             requestor.send(:handle_background, result)
           end

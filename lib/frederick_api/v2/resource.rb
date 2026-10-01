@@ -35,19 +35,15 @@ module FrederickAPI
         "#{top_level_namespace.config.base_url}/v2/"
       end
 
-      def self.with_access_token(token)
-        with_access_token_and_headers(token) do
-          yield
-        end
+      def self.with_access_token(token, &block)
+        with_access_token_and_headers(token, &block)
       end
 
-      def self.with_access_token_and_headers(token, headers = {})
+      def self.with_access_token_and_headers(token, headers = {}, &block)
         with_headers(
           authorization: "Bearer #{token}",
-          **headers
-        ) do
-          yield
-        end
+          **headers, &block
+        )
       end
 
       def self.custom_headers

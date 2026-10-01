@@ -16,7 +16,10 @@ describe FrederickAPI::V2::Helpers::Paginator do
   let(:links) { { 'first' => 'first_link' } }
   let(:eligible_page_count_val) { 5 }
 
-  before { allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times) }
+  before do
+    allow(FrederickAPI.config).to receive(:retry_times).and_return(retry_times)
+    allow(paginator).to receive(:sleep)
+  end
 
   describe 'superclass' do
     it { expect(described_class.superclass).to eq JsonApiClient::Paginating::Paginator }
@@ -150,11 +153,9 @@ describe FrederickAPI::V2::Helpers::Paginator do
 
   describe '#pages_to_be_fetched' do
     before do
-      allow(paginator).to receive(:eligible_page_count).and_return eligible_page_count_val
       allow(FrederickAPI.config).to receive(:jsonapi_campaign_check_enabled).and_return(true)
-      allow(paginator).to receive(:is_campaign_source?).and_return(true)
-      allow(paginator).to receive(:total_pages).and_return(8)
-      allow(paginator).to receive(:current_page).and_return(1)
+      allow(paginator).to receive_messages(eligible_page_count: eligible_page_count_val, is_campaign_source?: true,
+                                           total_pages: 8, current_page: 1)
     end
 
     it 'returns the min pages count value' do
