@@ -40,10 +40,42 @@ module FrederickAPI::V2::Errors
     end
   end
 
+  describe Error, '#to_s' do
+    let(:result) { FrederickAPI::V2::Resource.new }
+
+    it 'shows the detail of a JSON:API error object' do
+      allow(result).to receive(:errors).and_return(
+        JsonApiClient::ErrorCollector.new([{ 'detail' => 'Name is required' }])
+      )
+      expect(described_class.new(result).message).to eq 'Client Error: Name is required'
+    end
+  end
+
   describe BadRequest do
     subject { described_class.new(FrederickAPI::V2::Resource.new) }
 
     it { is_expected.to be_a(Error) }
+  end
+
+  describe BackgroundJobFailure do
+    it { expect(described_class.new(FrederickAPI::V2::Resource.new)).to be_a(Error) }
+
+    context 'a background job that frolodex marked as failed with plain-string messages' do
+      let(:job) { FrederickAPI::V2::BackgroundJob.new(status: 'error', messages: ['stack level too deep']) }
+      let(:error) { described_class.new(job) }
+
+      it 'names the reason instead of an empty "Client Error: " message (AB#1284255)' do
+        expect(error.message).to eq 'Client Error: stack level too deep'
+        expect(error.errors).to eq [{ 'detail' => 'stack level too deep' }]
+        expect(error.env).to be job
+      end
+    end
+
+    context 'a background job that failed with JSON:API error objects' do
+      let(:job) { FrederickAPI::V2::BackgroundJob.new(status: 'error', messages: [{ 'detail' => 'boom' }]) }
+
+      it { expect(described_class.new(job).message).to eq 'Client Error: boom' }
+    end
   end
 
   describe UnprocessableEntity do
