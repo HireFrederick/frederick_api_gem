@@ -1,0 +1,12 @@
+# frozen_string_literal: true
+
+# Used ONLY by the Test audit workflow, via BUNDLE_GEMFILE=Gemfile.audit.
+# It loads the real Gemfile unchanged and adds SimpleCov on top. The workflow first copies
+# Gemfile.lock to Gemfile.audit.lock, so every existing gem stays at its locked version;
+# Bundler only resolves simplecov and its own dependencies. The real Gemfile and
+# Gemfile.lock are never modified.
+eval_gemfile File.expand_path("Gemfile", __dir__)
+
+group :test do
+  gem "simplecov", "~> 0.22", require: false
+end

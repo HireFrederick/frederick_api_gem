@@ -1,0 +1,190 @@
+# Marketing Suite test audit for frederick_api_gem: inventory, layered coverage, flakiness evidence.
+# Generated from this repo's own ci_steps.yml (same runner, services, env, setup steps, secrets).
+# Runs ONLY on audit/** branches and manual dispatch; never on pull requests or development-arcus.
+# Produces artifacts: audit-inventory (rspec --dry-run JSON, stack), resultset-* (SimpleCov per shard),
+# audit-rspec-* / audit-cucumber-* / audit-js (per-shard results), test-audit-report (merged coverage + summary).
+# Layers by spec folder: integration = controllers|requests|routing|views|mailers|integration|features|system; unit = the rest.
+# SimpleCov: absent (added via Gemfile.audit overlay, locked versions kept).
+# Flakiness: run several times on the same commit with cucumber_opts empty; pass-and-fail on identical code = flaky.
+name: Test audit
+on:
+  push:
+    branches:
+    - audit/**
+  workflow_dispatch:
+    inputs:
+      run_label:
+        description: Label for this run (baseline, flaky-1, ...)
+        required: false
+        default: baseline
+      cucumber_opts:
+        description: Extra Cucumber options. Empty = no retries
+        required: false
+        default: ''
+permissions:
+  contents: read
+env:
+  RUBY_VERSION: 3.3.10
+  DOCKER: true
+  RAILS_ENV: test
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    name: Inventory (dry run)
+    timeout-minutes: 40
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Install Ruby and gems
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ env.RUBY_VERSION }}
+        bundler-cache: true
+    - name: Add SimpleCov through Gemfile.audit (real Gemfile and lockfile untouched; locked versions kept)
+      env:
+        BUNDLE_FROZEN: 'false'
+        BUNDLE_DEPLOYMENT: 'false'
+      run: '[ -f Gemfile.lock ] && cp Gemfile.lock Gemfile.audit.lock || echo ''no Gemfile.lock in this repo; Bundler resolves the overlay fresh, as CI does for the real Gemfile''
+
+        BUNDLE_GEMFILE=Gemfile.audit bundle install --jobs 4 --retry 3
+
+        BUNDLE_GEMFILE=Gemfile.audit bundle exec ruby -e ''require "simplecov"; puts "simplecov #{SimpleCov::VERSION} ready"'''
+    - name: Record run metadata
+      run: 'mkdir -p audit
+
+        cat > audit/meta.json <<EOF
+
+        {"repo":"${{ github.repository }}","sha":"${{ github.sha }}","ref":"${{ github.ref_name }}","run_id":"${{ github.run_id }}","run_attempt":"${{ github.run_attempt }}","run_url":"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}","label":"${{ inputs.run_label }}","cucumber_opts":"${{ inputs.cucumber_opts }}","started_at":"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}
+
+        EOF
+
+        cat audit/meta.json'
+    - name: Assign every spec file to a layer
+      run: 'find spec -name ''*_spec.rb'' | sort | awk ''{ layer = ($0 ~ "/(controllers|requests|routing|views|mailers|integration|features|system)/") ? "integration" : "unit"; print layer "\t" $0 }'' > audit/spec-files-layers.tsv
+
+        cut -f1 audit/spec-files-layers.tsv | sort | uniq -c'
+    - name: List every feature file
+      run: mkdir -p audit; (find features -name '*.feature' 2>/dev/null | sort) > audit/feature-files.txt; wc -l < audit/feature-files.txt
+    - name: RSpec inventory (dry run lists every example, executes nothing)
+      env:
+        SIMPLECOV_COMMAND_NAME: inventory
+        BUNDLE_GEMFILE: Gemfile.audit
+      run: bundle exec rspec --dry-run --format json --out audit/rspec-inventory.json --format progress
+    - name: Test stack versions
+      if: always()
+      env:
+        BUNDLE_GEMFILE: Gemfile.audit
+      run: bundle list | grep -E ' (rails|sinatra|rspec-core|rspec-rails|cucumber|capybara|selenium-webdriver|webdrivers|teaspoon|jasmine|knapsack|simplecov|factory_bot|vcr|webmock|shoulda-matchers|database_cleaner|timecop|karafka) \(' | tee audit/test-stack.txt
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: audit-inventory
+        path: audit/
+  rspec:
+    runs-on: ubuntu-latest
+    name: RSpec ${{ matrix.group }}-${{ matrix.shard }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - group: unit
+          shard: 0
+          total: 1
+        - group: integration
+          shard: 0
+          total: 1
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Install Ruby and gems
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ env.RUBY_VERSION }}
+        bundler-cache: true
+    - name: Add SimpleCov through Gemfile.audit (real Gemfile and lockfile untouched; locked versions kept)
+      env:
+        BUNDLE_FROZEN: 'false'
+        BUNDLE_DEPLOYMENT: 'false'
+      run: '[ -f Gemfile.lock ] && cp Gemfile.lock Gemfile.audit.lock || echo ''no Gemfile.lock in this repo; Bundler resolves the overlay fresh, as CI does for the real Gemfile''
+
+        BUNDLE_GEMFILE=Gemfile.audit bundle install --jobs 4 --retry 3
+
+        BUNDLE_GEMFILE=Gemfile.audit bundle exec ruby -e ''require "simplecov"; puts "simplecov #{SimpleCov::VERSION} ready"'''
+    - name: Select spec files for this shard
+      run: 'if [ "${{ matrix.group }}" = "integration" ]; then find spec -name ''*_spec.rb'' | grep -E ''/(controllers|requests|routing|views|mailers|integration|features|system)/''; else find spec -name ''*_spec.rb'' | grep -v -E ''/(controllers|requests|routing|views|mailers|integration|features|system)/''; fi | sort | awk -v n=${{ matrix.total }} -v i=${{ matrix.shard }} ''NR % n == i'' > shard_files.txt
+
+        echo "$(wc -l < shard_files.txt) spec files in shard ${{ matrix.group }}-${{ matrix.shard }}"
+
+        if [ ! -s shard_files.txt ]; then echo ''no spec files for this shard''; fi'
+    - name: Run RSpec with SimpleCov
+      env:
+        SIMPLECOV_COMMAND_NAME: ${{ matrix.group }}-${{ matrix.shard }}
+        BUNDLE_GEMFILE: Gemfile.audit
+      run: 'mkdir -p audit
+
+        if [ -s shard_files.txt ]; then bundle exec ruby script/test_audit/rspec_with_coverage.rb --format progress --format json --out audit/rspec-${{ matrix.group }}-${{ matrix.shard }}.json $(tr ''\n'' '' '' < shard_files.txt); else echo ''{"examples":[],"summary":{"example_count":0,"failure_count":0,"pending_count":0}}'' > audit/rspec-${{ matrix.group }}-${{ matrix.shard }}.json; fi'
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: resultset-${{ matrix.group }}-${{ matrix.shard }}
+        path: coverage/.resultset.json
+        include-hidden-files: true
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: audit-rspec-${{ matrix.group }}-${{ matrix.shard }}
+        path: audit/
+  collate:
+    name: Merge coverage and summarize
+    needs:
+    - inventory
+    - rspec
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Install Ruby and gems
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ env.RUBY_VERSION }}
+        bundler-cache: true
+    - name: Add SimpleCov through Gemfile.audit (real Gemfile and lockfile untouched; locked versions kept)
+      env:
+        BUNDLE_FROZEN: 'false'
+        BUNDLE_DEPLOYMENT: 'false'
+      run: '[ -f Gemfile.lock ] && cp Gemfile.lock Gemfile.audit.lock || echo ''no Gemfile.lock in this repo; Bundler resolves the overlay fresh, as CI does for the real Gemfile''
+
+        BUNDLE_GEMFILE=Gemfile.audit bundle install --jobs 4 --retry 3
+
+        BUNDLE_GEMFILE=Gemfile.audit bundle exec ruby -e ''require "simplecov"; puts "simplecov #{SimpleCov::VERSION} ready"'''
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: resultset-*
+        path: resultsets
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: audit-*
+        path: audit-parts
+        merge-multiple: true
+    - name: Merge coverage per layer
+      env:
+        BUNDLE_GEMFILE: Gemfile.audit
+      run: "ls -R resultsets | head -40\nfor g in unit integration cucumber all; do\n  case $g in\n    all) glob='resultsets/*/.resultset.json' ;;\n    *)   glob=\"resultsets/resultset-$g-*/.resultset.json\" ;;\n  esac\n  ls $glob >/dev/null 2>&1 || { echo \"no resultsets for $g\"; continue; }\n  bundle exec ruby script/test_audit/collate.rb \"$g\" \"$glob\" || echo \"::warning::collate failed for $g\"\ndone"
+    - name: Build summary
+      run: 'python3 script/test_audit/summarize.py audit-parts coverage-merged | tee audit-summary.md
+
+        cat audit-summary.md >> "$GITHUB_STEP_SUMMARY"'
+    - uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-audit-report
+        path: 'coverage-merged/
+
+          audit-summary.md
+
+          audit-summary.json
+
+          audit-parts/'
